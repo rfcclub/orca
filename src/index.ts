@@ -35,3 +35,16 @@ export type {
   DebugRef,
   DebugRefCost,
 } from './harness/types.js';
+
+// Issue-as-intent — pure logic over an injected GitHubPort (see openspec/changes/issue-as-intent)
+export { classifyIssue } from './issue/classify.js';
+export type { Classification, Shape } from './issue/classify.js';
+export { decideApproval, parseActors, kindOf } from './issue/approval.js';
+export type { ApprovalDecision } from './issue/approval.js';
+export { findUnacceptedProposed } from './issue/proposed.js';
+export { resolveStatus, remotePhase, parseIssueRef } from './issue/status.js';
+export type { Remote, ResolvedStatus } from './issue/status.js';
+export { localPhase } from './issue/phase.js';
+export type { OrcaPhase } from './issue/phase.js';
+export type { GitHubPort } from './issue/github.js';
+export type { Actors, Issue, Comment } from './issue/types.js';

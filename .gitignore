@@ -12,6 +12,5 @@ docs_untracks/
 .serena/
 .seal-gate-patch/
 
-# LoomKit dogfooding workflow state + generated graph — not published
-openspec/
+# Generated graph — not published
 graphify-out/
