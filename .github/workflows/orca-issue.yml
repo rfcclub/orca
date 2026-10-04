@@ -1,0 +1,37 @@
+name: Orca Issue
+
+# The only writer of orca:* phase labels and of the single progress comment.
+# issues / issue_comment events run the workflow file from the default branch, never
+# code from a PR. Issue text is read from the event payload file by the CLI and is
+# never interpolated into a shell command (no `${{ github.event.* }}` inside `run:`).
+on:
+  issues:
+    types: [opened, edited, reopened]
+  issue_comment:
+    types: [edited]
+  push:
+    paths:
+      - 'openspec/changes/**'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: orca-issue-${{ github.event.issue.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  orca:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: node dist/cli/index.js gha run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,8 +1,19 @@
 import { join } from 'path';
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { getLoomKitDir, listChanges } from '../utils.js';
+import type { GitHubPort } from '../../issue/github.js';
+import { GhCliPort } from '../../issue/gh-cli.js';
+import { localPhase } from '../../issue/phase.js';
+import { fetchRemote, parseIssueRef, resolveStatus } from '../../issue/status.js';
 
-export function cmdStatus(): void {
+export interface StatusOptions {
+  /** Builds the GitHub port for a repo; injected by tests. */
+  portFor?: (repo: string) => GitHubPort;
+  timeoutMs?: number;
+}
+
+export async function cmdStatus(opts: StatusOptions = {}): Promise<void> {
+  const portFor = opts.portFor ?? ((repo: string) => new GhCliPort(repo));
   const loomkitDir = getLoomKitDir();
   const changes = listChanges();
   const specsDir = join(loomkitDir, 'specs');
@@ -34,6 +45,16 @@ export function cmdStatus(): void {
 
     console.log(`  ${change} [${status}]`);
     console.log(`    ${hasProposal ? '✓' : '○'} proposal   ${hasDesign ? '✓' : '○'} design   ${hasTasks ? '✓' : '○'} plan`);
+
+    // Only changes that record a GitHub issue get a GitHub-aware phase line.
+    const intentPath = join(changeDir, 'intent.md');
+    const ref = existsSync(intentPath) ? parseIssueRef(readFileSync(intentPath, 'utf-8')) : null;
+    if (ref) {
+      const remote = await fetchRemote(portFor, ref, opts.timeoutMs);
+      for (const line of resolveStatus(localPhase(changeDir), remote).lines) {
+        console.log(`    ${line}`);
+      }
+    }
   }
 
   // Archive

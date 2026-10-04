@@ -5,6 +5,7 @@ import { parseSpec } from '../../spec/parser.js';
 import { calculateCoverage } from '../../tdd/traceability.js';
 import { parse as parseYaml } from 'yaml';
 import { TransitionGuard } from '../../harness/transition-guard.js';
+import { findUnacceptedProposed } from '../../issue/proposed.js';
 
 export function cmdVerify(name?: string, opts: { skip?: boolean } = {}): void {
   const changes = name ? [name] : listChanges();
@@ -80,6 +81,11 @@ function verifyChange(name: string, skip = false): void {
 
   const result = calculateCoverage(mandatoryScenarios, passingTests, 100);
 
+  // orca-proposed items count toward the gate only once a reviewer accepted them.
+  const intentPath = join(changeDir, 'intent.md');
+  const unaccepted = existsSync(intentPath) ? findUnacceptedProposed(readFileSync(intentPath, 'utf-8')) : [];
+  const passed = result.passes && unaccepted.length === 0;
+
   const verifyResult = {
     change: name,
     timestamp: new Date().toISOString(),
@@ -87,20 +93,24 @@ function verifyChange(name: string, skip = false): void {
     passing: passingTests.length,
     coverage: result.coverage,
     threshold: 100,
-    passed: result.passes,
+    passed,
     uncovered: result.uncovered,
+    ...(unaccepted.length > 0 ? { unaccepted } : {}),
   };
 
   const verifyPath = join(changeDir, '.loomkit-verify.json');
   writeFileSync(verifyPath, JSON.stringify(verifyResult, null, 2), 'utf-8');
 
-  const icon = result.passes ? '✓' : '✗';
+  const icon = passed ? '✓' : '✗';
   console.log(`\n${icon} ${name}`);
   console.log(`  Coverage: ${(result.coverage * 100).toFixed(0)}% (${passingTests.length}/${mandatoryScenarios.length})`);
   if (result.uncovered.length > 0) {
     console.log(`  Uncovered: ${result.uncovered.join(', ')}`);
   }
-  console.log(`  Verdict: ${result.passes ? 'PASS' : 'FAIL'}`);
+  if (unaccepted.length > 0) {
+    console.log(`  Unaccepted orca-proposed items: ${unaccepted.join('; ')}`);
+  }
+  console.log(`  Verdict: ${passed ? 'PASS' : 'FAIL'}`);
 }
 
 export { findChangeSpecFiles };

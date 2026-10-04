@@ -13,10 +13,15 @@ const IntentConfigSchema = z.object({
   require_no_blocking_ambiguities: z.boolean().default(false),
 });
 
+const DraftingConfigSchema = z.object({
+  provider: z.string().optional(),
+});
+
 const LoomKitConfigSchema = z.object({
   schema: z.enum(['spec-driven']).default('spec-driven'),
   tdd: TddConfigSchema.optional(),
   intent: IntentConfigSchema.optional(),
+  drafting: DraftingConfigSchema.optional(),
   context: z.string().default(''),
   rules: z.record(z.string(), z.array(z.string())).default({}),
 });

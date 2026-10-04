@@ -17,6 +17,8 @@ import { cmdCraft } from './commands/craft.js';
 import { cmdGatePipeline } from './commands/gate-pipeline.js';
 import { cmdLearn } from './commands/learn.js';
 import { cmdPlanJson } from './commands/plan-json.js';
+import { cmdIssue } from './commands/issue.js';
+import { cmdGha } from './commands/gha.js';
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
@@ -60,7 +62,7 @@ switch (command) {
     cmdShow(args[0] || undefined);
     break;
   case 'status':
-    cmdStatus();
+    await cmdStatus();
     break;
   case 'adapt':
     if (!args[0]) { console.error('Usage: loomkit adapt <tool> (claude-code | codex)'); process.exit(1); }
@@ -92,6 +94,12 @@ switch (command) {
   case 'plan-json':
     if (!args[0] || !args[1]) { console.error('Usage: loomkit plan-json <init|add|start|complete|finish|show> <name> [options]'); process.exit(1); }
     await cmdPlanJson(args[0], args[1], args.slice(2));
+    break;
+  case 'issue':
+    await cmdIssue(args);
+    break;
+  case 'gha':
+    await cmdGha(args[0]);
     break;
   case 'help':
   case '--help':
@@ -138,6 +146,13 @@ Harness commands:
                           complete: <task-id> --test-cmd "<cmd>" [--debug-session --debug-cycle --root-cause] [--escalated]
                           finish:   closes phase.json's "apply" phase once all tasks are complete
                           show:     (no options)
+
+Issue commands (GitHub issue as the intent of record):
+  issue classify <n>      Check an issue's sections against its bug/enhancement shape
+  issue draft <n> [--post]  Draft missing sections as tagged lines (needs drafting.provider)
+  issue open <n> --name <change>
+                          Create the change folder from an approved issue
+  gha run                 GitHub Action entry point (reads the event payload; sets labels/comments)
 
 Other:
   publish [--dry-run]     Publish current version to npm
