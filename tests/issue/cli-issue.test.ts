@@ -75,3 +75,31 @@ describe('cmdIssue', () => {
     await expect(cmdIssue(['classify', 'abc'], deps())).rejects.toThrow(/issue number/);
   });
 });
+
+describe('cmdIssue create and init', () => {
+  it('create makes one issue from a change and a repeat is refused quietly', async () => {
+    const { mkdirSync, writeFileSync } = await import('fs');
+    mkdirSync(join(dir, 'c1'), { recursive: true });
+    writeFileSync(join(dir, 'c1', 'intent.md'), `# Intent: c1\n\n${ENH_BODY}`);
+    await cmdIssue(['create', '--from-change', 'c1', '--shape', 'enhancement'], deps());
+    await cmdIssue(['create', '--from-change', 'c1', '--shape', 'enhancement'], deps());
+    expect(gh.created).toHaveLength(1);
+    expect(out.join('\n')).toContain('already has an issue');
+  });
+
+  it('create without --from-change or --shape shows the usage', async () => {
+    await expect(cmdIssue(['create'], deps())).rejects.toThrow(/--from-change/);
+  });
+
+  it('init sets up labels, workflow and actors', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'orca-cli-init-'));
+    try {
+      await cmdIssue(['init', '--reviewer', 'alice', '--agent', 'agent-oc'], deps({ projectRoot: root }));
+      expect(existsSync(join(root, '.github', 'workflows', 'orca-issue.yml'))).toBe(true);
+      expect(readFileSync(join(root, 'openspec', 'actors.yaml'), 'utf-8')).toContain('login: alice');
+      expect(gh.labelsEnsured).toContain('orca:spec');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});

@@ -92,3 +92,25 @@ describe('GhCliPort', () => {
     await expect(p.getIssue(1.5)).rejects.toThrow(/invalid issue number/);
   });
 });
+
+describe('GhCliPort creation helpers', () => {
+  it('createIssue posts title, body and labels and returns the number', async () => {
+    const { port: p, calls } = port([JSON.stringify({ number: 41 })]);
+    expect(await p.createIssue({ title: 'T', body: 'B', labels: ['bug'] })).toEqual({ number: 41 });
+    expect(calls[0].args).toEqual(['api', '-X', 'POST', 'repos/GotakoVN/orca/issues', '--input', '-']);
+    expect(JSON.parse(calls[0].input!)).toEqual({ title: 'T', body: 'B', labels: ['bug'] });
+  });
+
+  it('ensureLabel posts the label and ignores "already exists"', async () => {
+    const { port: p, calls } = port(['{}', new Error('gh api failed (exit 1): 422 Validation Failed already_exists')]);
+    await p.ensureLabel('orca:spec', 'ededed', 'desc');
+    await p.ensureLabel('orca:spec', 'ededed', 'desc');
+    expect(calls[0].args).toEqual(['api', '-X', 'POST', 'repos/GotakoVN/orca/labels', '--input', '-']);
+    expect(JSON.parse(calls[0].input!)).toEqual({ name: 'orca:spec', color: 'ededed', description: 'desc' });
+  });
+
+  it('ensureLabel rethrows other errors', async () => {
+    const { port: p } = port([new Error('gh api failed (exit 1): 500 boom')]);
+    await expect(p.ensureLabel('x', 'ededed', 'd')).rejects.toThrow(/500/);
+  });
+});
