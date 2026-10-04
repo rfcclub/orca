@@ -100,13 +100,13 @@ const URL_HOST = process.env.BRAINSTORM_URL_HOST || (HOST === '127.0.0.1' ? 'loc
 const SESSION_DIR = process.env.BRAINSTORM_DIR || '/tmp/brainstorm';
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
-const LOOMKIT_VERSION = readLoomkitVersion();
+const ORCA_VERSION = readOrcaVersion();
 const TELEMETRY_DISABLE_ENV_VARS = [
-  'LOOMKIT_DISABLE_TELEMETRY',
+  'ORCA_DISABLE_TELEMETRY',
   'DISABLE_TELEMETRY',
   'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC'
 ];
-const LOOMKIT_TELEMETRY_DISABLED = TELEMETRY_DISABLE_ENV_VARS.some(name => isTruthyEnv(process.env[name]));
+const ORCA_TELEMETRY_DISABLED = TELEMETRY_DISABLE_ENV_VARS.some(name => isTruthyEnv(process.env[name]));
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 
 // Per-session secret key
@@ -151,13 +151,13 @@ const MIME_TYPES = {
 function waitingPage() {
   return `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>LoomKit Brainstorm</title>
+<head><meta charset="utf-8"><title>Orca Brainstorm</title>
 <style>
 body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
 h1 { color: #333; } p { color: #666; }
 </style>
 </head>
-<body><h1>LoomKit Brainstorm</h1>
+<body><h1>Orca Brainstorm</h1>
 <p>Waiting for the agent to push a screen...</p></body></html>`;
 }
 
@@ -175,7 +175,7 @@ function bootstrapPage(key) {
   const jsonKey = JSON.stringify(String(key));
   return `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Opening LoomKit Brainstorm</title></head>
+<head><meta charset="utf-8"><title>Opening Orca Brainstorm</title></head>
 <body>
 <script>
 try { sessionStorage.setItem('brainstorm-session-key', ${jsonKey}); } catch (e) {}
@@ -191,7 +191,7 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 
 // ========== Helper Functions ==========
 
-function readLoomkitVersion() {
+function readOrcaVersion() {
   const root = path.join(__dirname, '../../..');
   const manifests = [
     path.join(root, 'package.json'),

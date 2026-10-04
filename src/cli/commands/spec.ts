@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { existsSync, readFileSync, mkdirSync } from 'fs';
 import { getChangeDir, changeExists, writeFileSafe, readConfig } from '../utils.js';
+import { LEGACY_WORKSPACE_DIR } from '../../legacy.js';
 
 const DEFAULT_PROPOSAL = `## Why
 
@@ -74,12 +75,12 @@ export function cmdSpec(name: string): void {
 
     if (enforceIntent) {
       console.error(`✗  Intent gate: No intent.md found for "${name}".`);
-      console.error(`   Run: loomkit intent ${name}`);
-      console.error('   Or set intent.enforce: false in loomkit/config.yaml to skip.');
+      console.error(`   Run: orca intent ${name}`);
+      console.error('   Or set intent.enforce: false in orca/config.yaml to skip.');
       process.exit(1);
     } else {
       console.warn('⚠  Intent gate: No intent.md found. Spec may lack intent traceability.');
-      console.warn(`   Run: loomkit intent ${name}`);
+      console.warn(`   Run: orca intent ${name}`);
       console.warn('');
     }
   }
@@ -107,13 +108,13 @@ function addSpecFiles(changeDir: string, name: string): void {
   console.log(`  └── specs/${name}/spec.md`);
 
   console.log('\n💡  Next: edit the proposal and spec, then:');
-  console.log(`  loomkit design ${name}`);
-  console.log(`  loomkit plan ${name}`);
+  console.log(`  orca design ${name}`);
+  console.log(`  orca plan ${name}`);
 }
 
 function findTemplate(name: string): string {
-  // Try schemas in workspace subdirectories (loomkit/ or openspec/)
-  for (const wsName of ['loomkit', 'openspec']) {
+  // Try schemas in workspace subdirectories (orca/ or openspec/)
+  for (const wsName of ['orca', LEGACY_WORKSPACE_DIR, 'openspec']) {
     const schemasDir = join(process.cwd(), wsName, 'schemas', 'spec-driven', 'templates');
     const templatePath = join(schemasDir, name);
     if (existsSync(templatePath)) {

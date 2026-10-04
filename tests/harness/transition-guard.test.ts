@@ -8,7 +8,7 @@ import { createPhaseJson, recordPhaseComplete } from '../../src/harness/phase-js
 let tmpDir: string
 
 beforeEach(() => {
-  tmpDir = join(tmpdir(), `loomkit-tg-${Date.now()}`)
+  tmpDir = join(tmpdir(), `orca-tg-${Date.now()}`)
   mkdirSync(tmpDir, { recursive: true })
 })
 

@@ -16,7 +16,7 @@ export function createPlanJson(changeDir: string, changeId: string, traceTarget:
 
 export function readPlanJson(changeDir: string): PlanJson {
   const p = planJsonPath(changeDir)
-  if (!existsSync(p)) throw new Error(`plan.json not found at ${p} — run loomkit plan first`)
+  if (!existsSync(p)) throw new Error(`plan.json not found at ${p} — run orca plan first`)
   return JSON.parse(readFileSync(p, 'utf-8')) as PlanJson
 }
 

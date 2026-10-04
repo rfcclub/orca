@@ -10,7 +10,7 @@ import type { PlanJson, PlanTask } from '../../src/harness/types.ts'
 let tmpDir: string
 
 beforeEach(() => {
-  tmpDir = join(tmpdir(), `loomkit-planguard-${Date.now()}`)
+  tmpDir = join(tmpdir(), `orca-planguard-${Date.now()}`)
   mkdirSync(tmpDir, { recursive: true })
 })
 

@@ -6,7 +6,7 @@ describe('Schema Loader', () => {
     const yaml = `
 name: spec-driven
 version: 1
-description: Default LoomKit workflow
+description: Default Orca workflow
 artifacts:
   - id: proposal
     generates: proposal.md

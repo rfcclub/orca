@@ -1,8 +1,8 @@
-# LoomKit — Spec-Driven Design Framework with TDD Superpowers
+# Orca — Spec-Driven Design Framework with TDD Superpowers
 
-## What Is LoomKit
+## What Is Orca
 
-LoomKit is a **collaboration framework for AI agents and humans**. It combines OpenSpec's structured workflow with Superpowers' TDD enforcement.
+Orca is a **collaboration framework for AI agents and humans**. It combines OpenSpec's structured workflow with Superpowers' TDD enforcement.
 
 **Two layers, one workflow:**
 1. **Skill instructions** (Superpowers-style) — agents know *what to do* at each phase
@@ -13,9 +13,9 @@ Both layers are markdown. Both are git-trackable. Humans approve via git merge; 
 - **From OpenSpec**: propose → spec → design → tasks → apply → archive workflow, config.yaml, living specs vs changes, delta specs, spec merging
 - **From Superpowers**: brainstorm → spec → plan flow, bite-sized tasks with exact code, TDD Iron Law (RED/GREEN/REFACTOR), no placeholders, verification gate
 
-**LoomKit is a fresh implementation**, not a wrapper. It takes methodology from both.
+**Orca is a fresh implementation**, not a wrapper. It takes methodology from both.
 
-## LoomKit Workflow
+## Orca Workflow
 
 ```
 /lk:brainstorm  → Socratic dialogue, explore context, propose 2-3 approaches
@@ -23,7 +23,7 @@ Both layers are markdown. Both are git-trackable. Humans approve via git merge; 
 /lk:design      → Technical design with test strategy (from Superpowers)
 /lk:plan        → Bite-sized tasks with exact code, TDD steps (from Superpowers)
 /lk:apply       → RED → GREEN → REFACTOR → VERIFY per task (from Superpowers)
-/lk:verify      → Scenario coverage check + test suite (LoomKit original)
+/lk:verify      → Scenario coverage check + test suite (Orca original)
 /lk:archive     → Gate: verify must pass → merge specs (from OpenSpec)
 ```
 
@@ -38,7 +38,7 @@ Output must be **human-readable by design**. Spec markdown, plan markdown, cover
 
 ## Key Differences From Source Projects
 
-| Aspect | OpenSpec | Superpowers | LoomKit |
+| Aspect | OpenSpec | Superpowers | Orca |
 |--------|----------|-------------|---------|
 | Workflow | propose→spec→design→tasks→apply→archive | brainstorm→spec→plan→TDD→review | Full merged pipeline |
 | Spec format | WHEN/THEN scenarios | Free-form design doc | **OpenSpec's WHEN/THEN** (structured) |
@@ -47,7 +47,7 @@ Output must be **human-readable by design**. Spec markdown, plan markdown, cover
 | Brainstorm | Not included | Socratic dialogue | **Included** as first phase |
 | Verify | Manual review | Checklist | **Automated**: scenario coverage gate |
 
-## What LoomKit Takes From Each
+## What Orca Takes From Each
 
 ### From OpenSpec (~/repo/OpenSpec)
 - `config.yaml` with schema, context, rules, per-artifact instructions
@@ -65,7 +65,7 @@ Output must be **human-readable by design**. Spec markdown, plan markdown, cover
 - Verification: checklist before marking done
 - Plan structure: Task → Step → exact code → expected output → commit
 
-### LoomKit Original
+### Orca Original
 - TDD enforcement in verify gate (scenario coverage = test coverage)
 - Traceability: scenario → test mapping
 - Coverage threshold in config
@@ -74,7 +74,7 @@ Output must be **human-readable by design**. Spec markdown, plan markdown, cover
 
 ```
 project/
-├── loomkit/
+├── orca/
 │   ├── config.yaml               # schema, context, rules, tdd config
 │   ├── schemas/                  # workflow schemas (like OpenSpec)
 │   │   └── spec-driven/
@@ -84,7 +84,7 @@ project/
 │   │   └── auth/spec.md
 │   ├── changes/                  # active changes
 │   │   └── add-authentication/
-│   │       ├── .loomkit-verify.json
+│   │       ├── .orca-verify.json
 │   │       ├── .traceability.yaml
 │   │       ├── proposal.md
 │   │       ├── specs/
@@ -101,16 +101,16 @@ project/
 |----------|------|--------|
 | Brainstorm | (interactive, then → proposal.md) | Superpowers |
 | Proposal | proposal.md | OpenSpec |
-| Specs | specs/\<name\>/spec.md | OpenSpec + LoomKit (WHEN/THEN = test contract) |
+| Specs | specs/\<name\>/spec.md | OpenSpec + Orca (WHEN/THEN = test contract) |
 | Design | design.md | OpenSpec + Superpowers (must include test strategy) |
 | Tasks | tasks.md | Superpowers format (bite-sized, exact code, TDD steps) |
-| Traceability | .traceability.yaml | LoomKit original |
-| Verify | .loomkit-verify.json | LoomKit original |
+| Traceability | .traceability.yaml | Orca original |
+| Verify | .orca-verify.json | Orca original |
 
 ## Config
 
 ```yaml
-# loomkit/config.yaml
+# orca/config.yaml
 schema: spec-driven
 
 tdd:
@@ -183,7 +183,7 @@ src/
 
 ## Coding Tool Support
 
-LoomKit targets AI coding agents. Each tool has different conventions for how agents receive instructions.
+Orca targets AI coding agents. Each tool has different conventions for how agents receive instructions.
 
 ### Core Support (now)
 
@@ -192,7 +192,7 @@ LoomKit targets AI coding agents. Each tool has different conventions for how ag
 | **Claude Code** | `CLAUDE.md` + skill files in `~/.claude/skills/` | SKILL.md format native |
 | **Codex** | `AGENTS.md` + instructions | OpenClaw-style instructions |
 
-SKILL.md files work as-is for Claude Code. For Codex, LoomKit generates equivalent `AGENTS.md` fragments or the human adapts SKILL.md into Codex instructions.
+SKILL.md files work as-is for Claude Code. For Codex, Orca generates equivalent `AGENTS.md` fragments or the human adapts SKILL.md into Codex instructions.
 
 ### Future Support (planned)
 
@@ -204,7 +204,7 @@ SKILL.md files work as-is for Claude Code. For Codex, LoomKit generates equivale
 Design principle: **same markdown artifacts, different instruction adapters**. The spec/plan/verify output doesn't change per tool — only how the agent *receives* the workflow instructions changes.
 
 ```
-loomkit/
+orca/
 ├── skills/              # SKILL.md (tool-agnostic source of truth)
 ├── adapters/
 │   ├── claude-code/     # CLAUDE.md + ~/.claude/skills/ format

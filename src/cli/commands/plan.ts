@@ -46,7 +46,7 @@ const DEFAULT_TASKS = `# Implementation Plan: {{NAME}}
 
 export function cmdPlan(name: string): void {
   if (!changeExists(name)) {
-    console.error(`✗  Change "${name}" not found. Run "loomkit spec ${name}" first.`);
+    console.error(`✗  Change "${name}" not found. Run "orca spec ${name}" first.`);
     process.exit(1);
   }
 
@@ -62,5 +62,5 @@ export function cmdPlan(name: string): void {
   writeFileSync(planPath, content, 'utf-8');
   console.log(`✓  Created tasks.md for "${name}"`);
   console.log(`  ${planPath}`);
-  console.log('\n💡  Next: implement TDD, then loomkit verify ' + name);
+  console.log('\n💡  Next: implement TDD, then orca verify ' + name);
 }

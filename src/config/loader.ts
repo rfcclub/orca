@@ -17,7 +17,7 @@ const DraftingConfigSchema = z.object({
   provider: z.string().optional(),
 });
 
-const LoomKitConfigSchema = z.object({
+const OrcaConfigSchema = z.object({
   schema: z.enum(['spec-driven']).default('spec-driven'),
   tdd: TddConfigSchema.optional(),
   intent: IntentConfigSchema.optional(),
@@ -26,7 +26,7 @@ const LoomKitConfigSchema = z.object({
   rules: z.record(z.string(), z.array(z.string())).default({}),
 });
 
-export type LoomKitConfig = z.infer<typeof LoomKitConfigSchema>;
+export type OrcaConfig = z.infer<typeof OrcaConfigSchema>;
 export type IntentConfig = z.infer<typeof IntentConfigSchema>;
 
 function substituteEnvVars(value: string): string {
@@ -39,9 +39,9 @@ function substituteEnvVars(value: string): string {
   });
 }
 
-export function loadConfig(yamlContent: string | null): LoomKitConfig {
+export function loadConfig(yamlContent: string | null): OrcaConfig {
   if (!yamlContent) {
-    return LoomKitConfigSchema.parse({ tdd: TddConfigSchema.parse({}) });
+    return OrcaConfigSchema.parse({ tdd: TddConfigSchema.parse({}) });
   }
 
   // Simple YAML parsing for flat structure
@@ -95,5 +95,5 @@ export function loadConfig(yamlContent: string | null): LoomKitConfig {
     }
   }
 
-  return LoomKitConfigSchema.parse(raw);
+  return OrcaConfigSchema.parse(raw);
 }

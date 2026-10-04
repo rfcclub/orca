@@ -1,10 +1,11 @@
 import { join } from 'path';
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
-import { getLoomKitDir, listChanges } from '../utils.js';
+import { getWorkspaceDir, listChanges } from '../utils.js';
 import type { GitHubPort } from '../../issue/github.js';
 import { GhCliPort } from '../../issue/gh-cli.js';
 import { localPhase } from '../../issue/phase.js';
 import { fetchRemote, parseIssueRef, resolveStatus } from '../../issue/status.js';
+import { verifyFilePath } from '../../legacy.js';
 
 export interface StatusOptions {
   /** Builds the GitHub port for a repo; injected by tests. */
@@ -14,14 +15,14 @@ export interface StatusOptions {
 
 export async function cmdStatus(opts: StatusOptions = {}): Promise<void> {
   const portFor = opts.portFor ?? ((repo: string) => new GhCliPort(repo));
-  const loomkitDir = getLoomKitDir();
+  const workspaceDir = getWorkspaceDir();
   const changes = listChanges();
-  const specsDir = join(loomkitDir, 'specs');
-  const archiveDir = join(loomkitDir, 'archive');
+  const specsDir = join(workspaceDir, 'specs');
+  const archiveDir = join(workspaceDir, 'archive');
 
-  console.log('LoomKit Status');
+  console.log('Orca Status');
   console.log('━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`Location: ${loomkitDir}`);
+  console.log(`Location: ${workspaceDir}`);
 
   // Living specs
   const specCount = countFiles(specsDir, 'spec.md');
@@ -30,8 +31,8 @@ export async function cmdStatus(opts: StatusOptions = {}): Promise<void> {
   // Active changes
   console.log(`\n🔄 Active changes: ${changes.length}`);
   for (const change of changes) {
-    const changeDir = join(loomkitDir, 'changes', change);
-    const verifyPath = join(changeDir, '.loomkit-verify.json');
+    const changeDir = join(workspaceDir, 'changes', change);
+    const verifyPath = verifyFilePath(changeDir);
 
     let status = 'draft';
     if (existsSync(verifyPath)) {

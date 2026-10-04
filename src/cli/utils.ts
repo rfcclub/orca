@@ -1,20 +1,21 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from 'fs';
 import { resolve, join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { LEGACY_WORKSPACE_DIR } from '../legacy.js';
 
 export function getProjectRoot(): string {
   const cwd = process.cwd();
 
-  // Check current directory for openspec/ or loomkit/
-  for (const dirname of ['openspec', 'loomkit']) {
+  // Check current directory for openspec/ or orca/
+  for (const dirname of ['openspec', 'orca', LEGACY_WORKSPACE_DIR]) {
     const d = join(cwd, dirname);
     if (existsSync(d) && statSync(d).isDirectory()) return cwd;
   }
 
-  // Walk up looking for openspec/ or loomkit/
+  // Walk up looking for openspec/ or orca/
   let dir = cwd;
   while (dir !== '/') {
-    for (const dirname of ['openspec', 'loomkit']) {
+    for (const dirname of ['openspec', 'orca', LEGACY_WORKSPACE_DIR]) {
       if (existsSync(join(dir, dirname)) && statSync(join(dir, dirname)).isDirectory()) {
         return dir;
       }
@@ -27,19 +28,21 @@ export function getProjectRoot(): string {
 
 /**
  * Returns the workspace directory. Prefers `openspec/` if it already exists
- * (shared with OpenSpec CLI), otherwise uses `loomkit/`.
+ * (shared with OpenSpec CLI), then `orca/`, then the legacy directory of the former name.
  */
-export function getLoomKitDir(): string {
+export function getWorkspaceDir(): string {
   const root = getProjectRoot();
   const openspecDir = join(root, 'openspec');
   if (existsSync(openspecDir) && statSync(openspecDir).isDirectory()) {
     return openspecDir;
   }
-  return join(root, 'loomkit');
+  const legacyDir = join(root, LEGACY_WORKSPACE_DIR);
+  if (existsSync(legacyDir) && statSync(legacyDir).isDirectory()) return legacyDir;
+  return join(root, 'orca');
 }
 
 export function getChangesDir(): string {
-  return join(getLoomKitDir(), 'changes');
+  return join(getWorkspaceDir(), 'changes');
 }
 
 export function getChangeDir(name: string): string {
@@ -47,11 +50,11 @@ export function getChangeDir(name: string): string {
 }
 
 export function getSpecsDir(): string {
-  return join(getLoomKitDir(), 'specs');
+  return join(getWorkspaceDir(), 'specs');
 }
 
 export function getSchemasDir(): string {
-  return join(getLoomKitDir(), 'schemas');
+  return join(getWorkspaceDir(), 'schemas');
 }
 
 export function getPackageRoot(): string {
@@ -67,7 +70,7 @@ export function getBuiltinAdaptersDir(): string {
 }
 
 export function readConfig(): Record<string, any> {
-  const configPath = join(getLoomKitDir(), 'config.yaml');
+  const configPath = join(getWorkspaceDir(), 'config.yaml');
   if (!existsSync(configPath)) {
     return {};
   }

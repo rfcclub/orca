@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
-// Runs SEAL plan_review gate on loomkit-harness-complete spec + tasks
+// Runs SEAL plan_review gate on orca-harness-complete spec + tasks
 
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { Seal } from '../../seal-gate/src/index.ts'
 
-const CHANGE = 'loomkit-harness-complete'
+const CHANGE = 'orca-harness-complete'
 const CHANGE_DIR = join(import.meta.dir, '..', 'openspec', 'changes', CHANGE)
 const SPEC_FILE = join(CHANGE_DIR, 'specs', CHANGE, 'spec.md')
 const INTENT_FILE = join(CHANGE_DIR, 'intent.md')

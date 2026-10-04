@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { getChangeDir, getChangesDir, changeExists, listChanges } from '../utils.js';
+import { verifyFilePath } from '../../legacy.js';
 
 export function cmdShow(name?: string): void {
   // No name — list all changes
@@ -18,7 +19,7 @@ export function cmdShow(name?: string): void {
       const hasProposal = existsSync(join(changeDir, 'proposal.md'));
       const hasDesign = existsSync(join(changeDir, 'design.md'));
       const hasTasks = existsSync(join(changeDir, 'tasks.md'));
-      const hasVerify = existsSync(join(changeDir, '.loomkit-verify.json'));
+      const hasVerify = existsSync(verifyFilePath(changeDir));
 
       const flags = [
         hasIntent ? 'I' : '-',
@@ -33,14 +34,14 @@ export function cmdShow(name?: string): void {
     console.log('');
     console.log('  I=intent  P=proposal  D=design  T=tasks  V=verified');
     console.log('');
-    console.log('Usage: loomkit show <name>');
+    console.log('Usage: orca show <name>');
     return;
   }
 
   // Named change — show details
   if (!changeExists(name)) {
     console.error(`✗  Change "${name}" not found.`);
-    console.error('   Run: loomkit show');
+    console.error('   Run: orca show');
     process.exit(1);
   }
 
@@ -84,7 +85,7 @@ export function cmdShow(name?: string): void {
   }
 
   // Show verify status
-  const verifyPath = join(changeDir, '.loomkit-verify.json');
+  const verifyPath = verifyFilePath(changeDir);
   if (existsSync(verifyPath)) {
     const verify = JSON.parse(readFileSync(verifyPath, 'utf-8'));
     const passed = verify.passed ? '✓ PASS' : '✗ FAIL';

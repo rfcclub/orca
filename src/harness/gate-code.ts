@@ -24,7 +24,7 @@ export async function runGateCode(opts: {
    *  process.cwd() — matches PlanGuard's own projectRoot convention (plan-guard.ts),
    *  not a fixed '..' walk from changeDir, which breaks for any changeDir deeper than
    *  one level under the project root (e.g. openspec/changes/<name>/ or
-   *  loomkit/changes/<name>/ — both real, both two levels deep, not one). */
+   *  orca/changes/<name>/ — both real, both two levels deep, not one). */
   projectRoot?: string
   skipStateCheck?: boolean
   sealReviewFn?: (input: unknown) => Promise<unknown>
@@ -35,7 +35,7 @@ export async function runGateCode(opts: {
 
   const selfCheckPath = join(opts.changeDir, 'self-check.md')
   if (!existsSync(selfCheckPath)) {
-    throw new Error('self-check.md required before gate-code — run loomkit self-check first')
+    throw new Error('self-check.md required before gate-code — run orca self-check first')
   }
 
   const selfCheck = parseSelfCheck(readFileSync(selfCheckPath, 'utf-8'))
@@ -101,7 +101,7 @@ export async function runGateCode(opts: {
       build_log: '',
       references,
     },
-    context: { agent_id: 'loomkit-agent', agent_role: 'developer' },
+    context: { agent_id: 'orca-agent', agent_role: 'developer' },
   }) as {
     verdict: GateVerdict
     trust_score: number

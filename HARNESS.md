@@ -1,6 +1,6 @@
-# LoomKit Harness — Weak-Model Development & Debugging Pipeline
+# Orca Harness — Weak-Model Development & Debugging Pipeline
 
-This is the **second workflow** LoomKit supports, alongside the original
+This is the **second workflow** Orca supports, alongside the original
 Intent → Spec → Design → Plan → TDD → Verify → Archive flow described in
 `README.md`. The harness workflow exists for a different situation: you
 want *mechanically verifiable, small, hash-chained* work units that a
@@ -16,12 +16,12 @@ test from the acceptance criterion, make it pass, gate it, move on.
 ## The Four Pillars
 
 Four packages work together, named after fish, each pulled out of
-LoomKit as its own repo the moment it became a reusable concern rather
-than a LoomKit-specific implementation detail:
+Orca as its own repo the moment it became a reusable concern rather
+than a Orca-specific implementation detail:
 
 | Package | Role | Repo | Status |
 |---|---|---|---|
-| **orca — LoomKit** (this repo) | Lifecycle, plan tasks, gate orchestration | `~/work/loomkit` — [github.com/rfcclub/loomkit](https://github.com/rfcclub/loomkit) | real, published (`@gotako/loomkit`) |
+| **orca — Orca** (this repo) | Lifecycle, plan tasks, gate orchestration | `~/work/orca` — [github.com/rfcclub/orca](https://github.com/rfcclub/orca) | real, published (`@gotako/orca`) |
 | **seal — seal-gate** | Verification: does the diff actually match the claim? | `~/work/seal-gate` — [github.com/rfcclub/seal-gate](https://github.com/rfcclub/seal-gate) | real, published (`seal-gate`) |
 | **hammerhead — hammerhead-debug** | Hypothesis-gated debugging (DAP or log evidence) when a task gets stuck | `~/work/hammerhead-debug` — [github.com/rfcclub/hammerhead-debug](https://github.com/rfcclub/hammerhead-debug) | real, on GitHub (not yet published to npm) |
 | **pilotfish** | Drives a model through `plan.json` tasks by role, retries on failure, escalates to hammerhead-debug instead of guessing | `~/work/pilotfish` — [github.com/rfcclub/pilotfish](https://github.com/rfcclub/pilotfish) | real, on GitHub (not yet published to npm) |
@@ -46,10 +46,10 @@ external consumer would:
                     │              │  escalates on exhaustion
                     └──────┬───────┘
                            │ reads plan.json via
-                           │ @gotako/loomkit's public API
+                           │ @gotako/orca's public API
                            ▼
     ┌─────────────────────────────────────────┐
-    │              orca — LoomKit               │  lifecycle, plan.json,
+    │              orca — Orca               │  lifecycle, plan.json,
     │                                             │  phase.json, gate-code
     └───────┬─────────────────────────┬─────────┘
             │ file: dependency         │ file: dependency
@@ -59,7 +59,7 @@ external consumer would:
     │  quality gate,   │         │ (also invoked        │  debug loop,
     │  mutation-probe  │         │  directly by a human  │  DAP or log
     │                  │         │  or an agent, not      │  evidence
-    │                  │         │  only via loomkit)     │
+    │                  │         │  only via orca)     │
     └───────────────┘         └──────────┬─────────────┘
                                           │ subprocess
                                           ▼
@@ -75,19 +75,19 @@ external consumer would:
 ```bash
 npm install @gotako/pilotfish@beta
 # or just the harness core, without pilotfish's automation:
-npm install @gotako/loomkit@beta
+npm install @gotako/orca@beta
 ```
 
 `@beta` resolves the **real** dependency chain from npm — no sibling
 repos, no `file:` paths, no manual clone order. `pilotfish@beta` pulls
-`@gotako/loomkit@beta`, which pulls `@gotako/hammerhead-debug@beta` and
+`@gotako/orca@beta`, which pulls `@gotako/hammerhead-debug@beta` and
 `seal-gate@beta`. Verified end-to-end (2026-08-09): built + tested every
 package against its real published dependency, not the local sibling
 clone, before publishing.
 
 ⚠️ **This is genuinely beta** — expect breaking changes without notice,
 not a stability guarantee. The default (non-`@beta`) dist-tag installs
-only `@gotako/loomkit`'s own spec-driven workflow with no harness
+only `@gotako/orca`'s own spec-driven workflow with no harness
 dependencies at all — that's the stable path if you don't need
 `gate-code`/`plan-json`/pilotfish/hammerhead-debug.
 
@@ -100,7 +100,7 @@ pipeline, the beta npm channel above is simpler and doesn't need this.
 
 ```bash
 mkdir -p ~/work && cd ~/work
-git clone git@github.com:rfcclub/loomkit.git
+git clone git@github.com:rfcclub/orca.git
 git clone git@github.com:rfcclub/seal-gate.git
 git clone git@github.com:rfcclub/hammerhead-debug.git
 git clone git@github.com:rfcclub/pilotfish.git
@@ -109,25 +109,25 @@ git clone git@github.com:rfcclub/pilotfish.git
 # below)
 git clone git@github.com:rfcclub/debug-skill.git
 # (or: if you already have them, just make sure they live directly
-#  under the same parent — ~/work/loomkit, ~/work/seal-gate, etc.)
+#  under the same parent — ~/work/orca, ~/work/seal-gate, etc.)
 ```
 
-**Note (since the 2026-08-09 beta release):** `loomkit`'s and
+**Note (since the 2026-08-09 beta release):** `orca`'s and
 `pilotfish`'s committed `package.json` now point their
-`@gotako/hammerhead-debug`/`seal-gate`/`@gotako/loomkit` dependencies at
+`@gotako/hammerhead-debug`/`seal-gate`/`@gotako/orca` dependencies at
 real published `@beta` npm versions, not `file:../...` relative paths —
 that's what makes the npm channel above work without sibling clones. If
-you're editing `hammerhead-debug`/`seal-gate`/`loomkit` locally and want
-`loomkit`/`pilotfish` to pick up your *uncommitted* changes live
+you're editing `hammerhead-debug`/`seal-gate`/`orca` locally and want
+`orca`/`pilotfish` to pick up your *uncommitted* changes live
 (instead of whatever's on npm), re-point the dependency yourself:
 `pnpm add @gotako/hammerhead-debug@file:../hammerhead-debug` (or the
-equivalent for `seal-gate`/`loomkit`) — same escape hatch this section
+equivalent for `seal-gate`/`orca`) — same escape hatch this section
 already documents in "Troubleshooting" below, just now needed by
 default rather than only when debugging a stale cache.
 
 Build order matters a little — `seal-gate` and `hammerhead-debug` have no
-dependency on the others, `loomkit` depends on both of them, `pilotfish`
-depends on `loomkit`:
+dependency on the others, `orca` depends on both of them, `pilotfish`
+depends on `orca`:
 
 ```bash
 # 1. seal-gate — no internal dependencies
@@ -140,25 +140,25 @@ cd ~/work/hammerhead-debug
 npm install
 npx tsc                       # outputs dist/
 
-# 3. loomkit — depends on both of the above via file:../seal-gate and
+# 3. orca — depends on both of the above via file:../seal-gate and
 #    file:../hammerhead-debug
-cd ~/work/loomkit
+cd ~/work/orca
 pnpm install
 pnpm build                    # tsc — outputs dist/
 
-# 4. pilotfish — depends on loomkit via file:../loomkit
+# 4. pilotfish — depends on orca via file:../orca
 cd ~/work/pilotfish
 npm install
 npx tsc                       # outputs dist/
 ```
 
-Each package exposes a `bin` entry (`loomkit`, `hammerhead-debug`,
+Each package exposes a `bin` entry (`orca`, `hammerhead-debug`,
 `pilotfish`). Once built, invoke any of them either:
-- by full path: `node ~/work/loomkit/dist/cli/index.js ...`,
+- by full path: `node ~/work/orca/dist/cli/index.js ...`,
   `node ~/work/hammerhead-debug/dist/cli.js ...`,
   `node ~/work/pilotfish/dist/cli.js ...`
 - or, from inside a project that has them installed as a real
-  dependency: `node_modules/.bin/loomkit ...` etc.
+  dependency: `node_modules/.bin/orca ...` etc.
 
 ### One-time: install the hammerhead-debug skill
 
@@ -186,7 +186,7 @@ This bit us **four separate times** while building this pipeline, so it's
 worth documenting plainly rather than re-discovering it: **pnpm (and to a
 lesser extent npm) cache the resolved contents of a `file:` dependency**.
 Rebuilding the *source* repo (e.g. `hammerhead-debug`) is not enough —
-the *consuming* repo (`loomkit`) may keep serving a stale copy from its
+the *consuming* repo (`orca`) may keep serving a stale copy from its
 own `node_modules` even after you `pnpm install` again.
 
 What reliably works, in order of increasing force:
@@ -231,16 +231,16 @@ intent → plan → branch → apply → gate-code → verify → finish → arc
 ## Step-by-Step Walkthrough (manual)
 
 Run these from the root of any project (a real one, or a scratch
-directory — LoomKit doesn't care).
+directory — Orca doesn't care).
 
 ### 1. Start a change
 
 ```bash
-loomkit intent my-feature
+orca intent my-feature
 ```
 
-Creates `loomkit/changes/my-feature/intent.md` (or `openspec/changes/...`
-if an `openspec/` directory already exists at the project root — LoomKit
+Creates `orca/changes/my-feature/intent.md` (or `openspec/changes/...`
+if an `openspec/` directory already exists at the project root — Orca
 detects which convention the project uses). Edit it: fill in the
 problem, desired outcome, and set `Status: APPROVED` at the bottom before
 continuing — `plan-json init` requires a resolved trace target.
@@ -248,9 +248,9 @@ continuing — `plan-json init` requires a resolved trace target.
 ### 2. Build the plan
 
 ```bash
-loomkit plan-json init my-feature --trace intent.md --resolved-by your-name
+orca plan-json init my-feature --trace intent.md --resolved-by your-name
 
-loomkit plan-json add my-feature \
+orca plan-json add my-feature \
   --id TASK-1 \
   --behavior "what this task makes true" \
   --acceptance "the specific, testable condition" \
@@ -266,13 +266,13 @@ task an executing model could flail on.
 ### 3. Work the task
 
 ```bash
-loomkit plan-json start my-feature TASK-1
+orca plan-json start my-feature TASK-1
 ```
 
 Now write the failing test (from `--acceptance`), then the code, then:
 
 ```bash
-loomkit plan-json complete my-feature TASK-1 --test-cmd "bun test tests/thing.test.ts"
+orca plan-json complete my-feature TASK-1 --test-cmd "bun test tests/thing.test.ts"
 ```
 
 This actually **runs** `--test-cmd` and only marks the task complete if
@@ -289,19 +289,19 @@ guess — open a hypothesis-gated debug session (see
 ```bash
 node ~/work/hammerhead-debug/dist/cli.js open \
   --symptom "what's actually wrong" --repro "command that reproduces it" \
-  --dir loomkit/changes/my-feature
+  --dir orca/changes/my-feature
 
-# hammerhead-debug hypothesis <session-id> "<why you think it happens>" --predict "<what you'd see if right>" --dir loomkit/changes/my-feature
-# hammerhead-debug probe <session-id> --kind instrumentation --observation "<real captured evidence>" --dir loomkit/changes/my-feature
+# hammerhead-debug hypothesis <session-id> "<why you think it happens>" --predict "<what you'd see if right>" --dir orca/changes/my-feature
+# hammerhead-debug probe <session-id> --kind instrumentation --observation "<real captured evidence>" --dir orca/changes/my-feature
 #   (or --kind dap --script <path> --break <file:line> --evaluate "<expr>" for a real breakpoint)
-# hammerhead-debug verdict <session-id> --result CONFIRMED --reason "..." --dir loomkit/changes/my-feature
+# hammerhead-debug verdict <session-id> --result CONFIRMED --reason "..." --dir orca/changes/my-feature
 ```
 
 Once the cycle is CONFIRMED, feed it back into `plan-json complete` so
 the fix is traceable to real evidence, not a guess:
 
 ```bash
-loomkit plan-json complete my-feature TASK-1 \
+orca plan-json complete my-feature TASK-1 \
   --test-cmd "bun test tests/thing.test.ts" \
   --debug-session dbg-XXXXXXXX --debug-cycle c-1 --root-cause "what was actually wrong"
 ```
@@ -313,13 +313,13 @@ rejected, not silently trusted.
 ### 5. Close out the plan, run the gate
 
 ```bash
-loomkit plan-json finish my-feature   # once every task is complete
+orca plan-json finish my-feature   # once every task is complete
 
-loomkit self-check my-feature          # scaffolds self-check.md — fill in
+orca self-check my-feature          # scaffolds self-check.md — fill in
                                         # Claims / Evidence (JSON) / Known
                                         # Limitations / Unresolved Assumptions
 
-loomkit gate-code my-feature           # runs the real SEAL gate + mutation-probe
+orca gate-code my-feature           # runs the real SEAL gate + mutation-probe
 ```
 
 `gate-code` prints a verdict (`PASS` / `PASS_WITH_WARNINGS` / `BLOCK` /
@@ -331,15 +331,15 @@ it still passes when it shouldn't).
 ### 6. Verify, archive
 
 ```bash
-loomkit verify my-feature
-loomkit archive my-feature
+orca verify my-feature
+orca archive my-feature
 ```
 
 ## Seal Gate — What `gate-code` Actually Calls
 
-`loomkit gate-code` (step 5 above) is a thin wrapper around seal-gate's
+`orca gate-code` (step 5 above) is a thin wrapper around seal-gate's
 own `Seal.review()` — worth knowing the real shape underneath if you
-need to call it directly (a CI step, a non-LoomKit workflow, or
+need to call it directly (a CI step, a non-Orca workflow, or
 debugging why a gate produced the verdict it did).
 
 ```ts
@@ -374,7 +374,7 @@ verdict.blocking_issues      // must-fix issues, if any
 Real verdict thresholds (this is what `gate-code`'s printed verdict
 maps to):
 
-| Verdict | Trust Score | What LoomKit does |
+| Verdict | Trust Score | What Orca does |
 |---|---|---|
 | `PASS` | ≥ 85 | `gate-code` exits 0 — proceed to `verify` |
 | `PASS_WITH_WARNINGS` | 70–84 | exits 0, prints advisory notes (e.g. `SPEC_UNTESTED`) |
@@ -383,7 +383,7 @@ maps to):
 | `BLOCK` | < 30, or a hard rule (see below) | exits non-zero — do not proceed |
 
 A handful of hard rules `BLOCK`/`ESCALATE` regardless of trust score —
-the ones most likely to fire inside a LoomKit-driven change:
+the ones most likely to fire inside a Orca-driven change:
 
 | Rule | Trigger |
 |---|---|
@@ -392,7 +392,7 @@ the ones most likely to fire inside a LoomKit-driven change:
 | `AX503` | a migration with no rollback plan |
 | `TW205` | an auth-related change with no unauthorized-access test |
 
-Standalone CLI, outside LoomKit entirely (a plain CI step, for
+Standalone CLI, outside Orca entirely (a plain CI step, for
 example):
 
 ```bash
@@ -448,8 +448,8 @@ Create this at your project root (or point `--config` at it elsewhere):
 ### Running it
 
 ```bash
-pilotfish run loomkit/changes/my-feature TASK-1
-# or: node ~/work/pilotfish/dist/cli.js run loomkit/changes/my-feature TASK-1
+pilotfish run orca/changes/my-feature TASK-1
+# or: node ~/work/pilotfish/dist/cli.js run orca/changes/my-feature TASK-1
 #   [--project-root <dir>]   defaults to cwd
 #   [--config <path>]        defaults to <project-root>/pilotfish.config.json
 #   [--role <role>]          defaults to "apply"
@@ -459,8 +459,8 @@ Prints a JSON result:
 - `{"status": "already_complete"}` — task was already done, nothing ran.
 - `{"status": "complete", "attempts": N}` — a passing attempt was found
   within the iteration limit. The task is **not** automatically marked
-  complete in `plan.json` — run `loomkit plan-json complete ...` next
-  (pilotfish deliberately doesn't duplicate loomkit's own, already-tested
+  complete in `plan.json` — run `orca plan-json complete ...` next
+  (pilotfish deliberately doesn't duplicate orca's own, already-tested
   completion logic — hashing files, updating `plan.json` — it only
   proves a passing state was reached).
 - `{"status": "escalate", "attempts": N, "reason": "...", "escalation": {...}}`
@@ -476,11 +476,11 @@ Prints a JSON result:
 this writing.** What's believed to work vs. what's flagged as unknown:
 
 **Should work, no Windows-specific code exists:**
-- All four CLIs (`loomkit`, `seal-gate` internals, `hammerhead-debug`,
+- All four CLIs (`orca`, `seal-gate` internals, `hammerhead-debug`,
   `pilotfish`) are plain Node.js (`#!/usr/bin/env node`), no OS-specific
   branches in their core logic.
 - `pnpm`/`npm` generate a `.cmd` shim for `bin` entries on Windows
-  automatically — `loomkit`, `hammerhead-debug`, `pilotfish` should be
+  automatically — `orca`, `hammerhead-debug`, `pilotfish` should be
   invocable the same way once installed.
 - `file:../...` relative dependency resolution — standard pnpm/npm
   behavior, not expected to differ on Windows, but not tested there.
@@ -489,7 +489,7 @@ this writing.** What's believed to work vs. what's flagged as unknown:
   Windows-style paths (`\` separators) without any code change needed.
 
 **Confirmed friction points (real, from source inspection):**
-- `loomkit plan-json complete --test-cmd "..."` and pilotfish's default
+- `orca plan-json complete --test-cmd "..."` and pilotfish's default
   test runner both shell out via `execFileSync('sh', ['-c', cmd], ...)`
   — **requires a POSIX `sh` on `PATH`**. Git Bash (bundled with Git for
   Windows) provides one; a bare `cmd.exe`/PowerShell-only environment
@@ -514,16 +514,16 @@ silently work around.**
 
 ## Escape Hatches
 
-Every state-checked LoomKit command accepts `--skip-state-check` if
+Every state-checked Orca command accepts `--skip-state-check` if
 `phase.json` enforcement gets in the way during manual testing/
 exploration — it warns loudly rather than failing silently, and is meant
 for development, not routine use.
 
 ## Reference: full command list
 
-### loomkit
+### orca
 
-Run `loomkit help` for the live list. As of this writing:
+Run `orca help` for the live list. As of this writing:
 
 ```
 Workflow:  init, intent, spec, design, plan, show, verify, archive
@@ -558,9 +558,9 @@ hammerhead-debug list [--dir <dir>]
 ```
 
 `--dir` defaults to `.hammerhead-debug` relative to cwd — pass a
-loomkit changeDir (`loomkit/changes/<name>` or `openspec/changes/<name>`)
+orca changeDir (`orca/changes/<name>` or `openspec/changes/<name>`)
 to keep a debug session's evidence attached to the plan task it serves,
-so `loomkit plan-json complete --debug-session ... --debug-cycle ...` can
+so `orca plan-json complete --debug-session ... --debug-cycle ...` can
 find and verify it.
 
 ### pilotfish
@@ -574,7 +574,7 @@ pilotfish run <changeDir> <task-id> [--project-root <dir>] [--config <path>] [--
 The reasoning behind this workflow (why weak-model sizing matters, how
 the hash-chain works, why mutation-probing exists, why pilotfish stays
 provider-agnostic) lives in:
-- `openspec/archive/loomkit-harness-complete-*/design.md`
+- `openspec/archive/orca-harness-complete-*/design.md`
 - `openspec/changes/gate-code-mutation-probe/{intent,design}.md`
 - `~/work/hammerhead-debug/openspec/changes/{extract-and-dap,dap-probe-via-debug-skill,debug-loop-skill-layer}/{intent,design}.md`
 - `~/work/pilotfish/openspec/changes/{scaffold-role-orchestrator,role-orchestrator-loop}/intent.md`

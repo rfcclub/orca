@@ -1,6 +1,6 @@
-# LoomKit — Claude Code Project Instructions
+# Orca — Claude Code Project Instructions
 
-LoomKit is a spec-driven design framework with TDD superpowers. This `CLAUDE.md` sets project-level instructions for Claude Code.
+Orca is a spec-driven design framework with TDD superpowers. This `CLAUDE.md` sets project-level instructions for Claude Code.
 
 ## Workflow Commands
 
@@ -13,22 +13,22 @@ Claude Code commands (slash commands in chat):
 | `/lk:design` | design | Architecture + test strategy → `design.md` |
 | `/lk:plan` | plan | Bite-sized TDD tasks → `tasks.md` |
 | `/lk:apply` | tdd | RED/GREEN/REFACTOR per task → code + `.traceability.yaml` |
-| `/lk:verify` | verify | Coverage gate + test run → `.loomkit-verify.json` |
+| `/lk:verify` | verify | Coverage gate + test run → `.orca-verify.json` |
 | `/lk:archive` | archive | Verify gate → merge specs → archive |
 
 ## Skill Files
 
-Phase instructions are loaded from `~/.claude/skills/loomkit-*/SKILL.md`.
+Phase instructions are loaded from `~/.claude/skills/orca-*/SKILL.md`.
 Run `adapters/claude-code/generate-skills.sh` to install them.
 
 Available skills:
-- `loomkit-brainstorm` — Socratic exploration, proposals
-- `loomkit-spec` — WHEN/THEN requirements
-- `loomkit-design` — Technical design with test strategy
-- `loomkit-plan` — Bite-sized TDD tasks with exact code
-- `loomkit-tdd` — RED/GREEN/REFACTOR enforcement
-- `loomkit-verify` — Coverage gate, test suite run
-- `loomkit-archive` — Spec merge, archive gate
+- `orca-brainstorm` — Socratic exploration, proposals
+- `orca-spec` — WHEN/THEN requirements
+- `orca-design` — Technical design with test strategy
+- `orca-plan` — Bite-sized TDD tasks with exact code
+- `orca-tdd` — RED/GREEN/REFACTOR enforcement
+- `orca-verify` — Coverage gate, test suite run
+- `orca-archive` — Spec merge, archive gate
 
 ## TDD Enforcement Rules
 
@@ -40,7 +40,7 @@ Available skills:
 ## Project Structure
 
 ```
-loomkit/                     # config + workflow
+orca/                     # config + workflow
 ├── config.yaml              # schema, context, rules, tdd config
 ├── changes/<name>/          # active changes
 │   ├── proposal.md
@@ -48,7 +48,7 @@ loomkit/                     # config + workflow
 │   ├── design.md
 │   ├── tasks.md
 │   ├── .traceability.yaml
-│   └── .loomkit-verify.json
+│   └── .orca-verify.json
 ├── specs/                   # living specs (source of truth)
 ├── archive/                 # completed changes
 ├── skills/                  # SKILL.md source files
@@ -65,11 +65,11 @@ loomkit/                     # config + workflow
 | design.md | design | Architecture decisions, test strategy, file changes |
 | tasks.md | plan | Bite-sized steps with exact code, TDD cycle |
 | .traceability.yaml | tdd | Scenario-ID → test-file mappings |
-| .loomkit-verify.json | verify | Coverage gate report |
+| .orca-verify.json | verify | Coverage gate report |
 
 ## Getting Started
 
 1. Run `bash adapters/claude-code/generate-skills.sh` to install skills
-2. Ensure `loomkit/config.yaml` exists (or create with defaults)
+2. Ensure `orca/config.yaml` exists (or create with defaults)
 3. Use `/lk:brainstorm` to start a new feature
 4. Follow the workflow: brainstorm → spec → design → plan → apply → verify → archive

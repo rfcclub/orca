@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-// Runs SEAL gate against the loomkit-harness-complete change
+// Runs SEAL gate against the orca-harness-complete change
 // Uses seal-gate from sibling repo at ~/work/seal-gate
 
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join } from 'path'
 import { Seal } from '../../seal-gate/src/index.ts'
 
-const CHANGE = 'loomkit-harness-complete'
+const CHANGE = 'orca-harness-complete'
 const CHANGE_DIR = join(import.meta.dir, '..', 'openspec', 'changes', CHANGE)
 const HARNESS_DIR = join(import.meta.dir, '..', 'src', 'harness')
 

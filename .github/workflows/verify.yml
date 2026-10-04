@@ -1,4 +1,4 @@
-name: LoomKit Verify
+name: Orca Verify
 on:
   pull_request:
     branches: [master]

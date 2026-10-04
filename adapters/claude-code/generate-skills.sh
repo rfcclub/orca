@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# generate-skills.sh — Copy LoomKit SKILL.md files to ~/.claude/skills/loomkit-*
+# generate-skills.sh — Copy Orca SKILL.md files to ~/.claude/skills/orca-*
 #
 # Usage: bash adapters/claude-code/generate-skills.sh
 # Run from the project root (where skills/ directory lives).
 
 set -euo pipefail
 
-LOOMKIT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-SKILLS_DIR="$LOOMKIT_ROOT/skills"
+ORCA_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+SKILLS_DIR="$ORCA_ROOT/skills"
 CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
 
 if [ ! -d "$SKILLS_DIR" ]; then
@@ -16,11 +16,11 @@ if [ ! -d "$SKILLS_DIR" ]; then
   exit 1
 fi
 
-echo "Installing LoomKit skills to $CLAUDE_SKILLS_DIR..."
+echo "Installing Orca skills to $CLAUDE_SKILLS_DIR..."
 
 for phase_dir in "$SKILLS_DIR"/*/; do
   phase_name="$(basename "$phase_dir")"
-  skill_name="loomkit-${phase_name}"
+  skill_name="orca-${phase_name}"
   target_dir="$CLAUDE_SKILLS_DIR/$skill_name"
 
   mkdir -p "$target_dir"
@@ -30,9 +30,9 @@ done
 
 echo ""
 echo "Done. ${#SKILL_DIRS[@]} skills installed."
-echo "Claude Code will now load LoomKit workflow skills automatically."
+echo "Claude Code will now load Orca workflow skills automatically."
 
 # List installed skills
 echo ""
 echo "Installed skills:"
-ls -1d "$CLAUDE_SKILLS_DIR"/loomkit-* 2>/dev/null || echo "  (none found)"
+ls -1d "$CLAUDE_SKILLS_DIR"/orca-* 2>/dev/null || echo "  (none found)"

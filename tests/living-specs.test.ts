@@ -3,7 +3,7 @@ import { parseDeltaSpec, parseSpec } from '../src/spec/index.js';
 import { mergeSpecIntoLiving, bumpVersion, addToChangelog } from '../src/cli/commands/archive.js';
 
 describe('Living Specs', () => {
-  const testDir = '/tmp/loomkit-living-specs-test';
+  const testDir = '/tmp/orca-living-specs-test';
 
   beforeEach(async () => {
     const fs = await import('fs');
@@ -103,17 +103,17 @@ The system SHALL authenticate users with 2FA support.
 describe('Version Bump', () => {
   it('increments patch version', async () => {
     const fs = await import('fs');
-    fs.writeFileSync('/tmp/loomkit-test-pkg.json', JSON.stringify({ version: '1.0.0' }), 'utf-8');
-    const newVersion = bumpVersion('/tmp/loomkit-test-pkg.json');
+    fs.writeFileSync('/tmp/orca-test-pkg.json', JSON.stringify({ version: '1.0.0' }), 'utf-8');
+    const newVersion = bumpVersion('/tmp/orca-test-pkg.json');
     expect(newVersion).toBe('1.0.1');
-    const pkg = JSON.parse(fs.readFileSync('/tmp/loomkit-test-pkg.json', 'utf-8'));
+    const pkg = JSON.parse(fs.readFileSync('/tmp/orca-test-pkg.json', 'utf-8'));
     expect(pkg.version).toBe('1.0.1');
   });
 
   it('increments from 1.2.9 to 1.2.10', () => {
     const fs = require('fs');
-    fs.writeFileSync('/tmp/loomkit-test-pkg2.json', JSON.stringify({ version: '1.2.9' }), 'utf-8');
-    const newVersion = bumpVersion('/tmp/loomkit-test-pkg2.json');
+    fs.writeFileSync('/tmp/orca-test-pkg2.json', JSON.stringify({ version: '1.2.9' }), 'utf-8');
+    const newVersion = bumpVersion('/tmp/orca-test-pkg2.json');
     expect(newVersion).toBe('1.2.10');
   });
 });

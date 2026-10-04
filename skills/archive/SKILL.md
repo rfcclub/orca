@@ -18,7 +18,7 @@ Gate: verify must pass (or force with documented reason). Merge delta specs into
 ## Instructions
 
 1. **Gate check:**
-   - Read `.loomkit-verify.json` from change directory
+   - Read `.orca-verify.json` from change directory
    - If `gate === "pass"` → proceed
    - If `gate !== "pass"` → require explicit force with reason (write to `.force-reason.md`)
 2. **Delta spec → living spec merge:**

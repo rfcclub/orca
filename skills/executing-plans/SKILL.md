@@ -17,7 +17,7 @@ Read an implementation plan produced by the plan phase and execute tasks sequent
 
 ## Instructions
 
-1. **Load the plan.** Read `loomkit/changes/<name>/tasks.md`. Identify:
+1. **Load the plan.** Read `orca/changes/<name>/tasks.md`. Identify:
    - Total task count
    - Completed tasks (checkboxes marked `[x]`)
    - Next pending task
@@ -41,7 +41,7 @@ Read an implementation plan produced by the plan phase and execute tasks sequent
    - If the deviation is significant, pause and flag for human review
 
 5. **On completion.** After all tasks are done:
-   - Run `loomkit verify <name>`
+   - Run `orca verify <name>`
    - Report final coverage and status
 
 ## Rules

@@ -158,16 +158,16 @@ describe('localPhase', () => {
   });
   it('is verified once the gate file says passed', () => {
     write('tasks.md');
-    write('.loomkit-verify.json', JSON.stringify({ passed: true }));
+    write('.orca-verify.json', JSON.stringify({ passed: true }));
     expect(localPhase(dir)).toBe('verified');
   });
   it('is not verified when the gate file says failed', () => {
     write('tasks.md');
-    write('.loomkit-verify.json', JSON.stringify({ passed: false }));
+    write('.orca-verify.json', JSON.stringify({ passed: false }));
     expect(localPhase(dir)).toBe('plan');
   });
   it('survives a corrupt plan.json or gate file', () => {
-    write('tasks.md'); write('plan.json', '{not json'); write('.loomkit-verify.json', '{nope');
+    write('tasks.md'); write('plan.json', '{not json'); write('.orca-verify.json', '{nope');
     expect(localPhase(dir)).toBe('plan');
   });
 });

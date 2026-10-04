@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { existsSync, readFileSync, mkdirSync } from 'fs';
 import { getChangeDir, changeExists, writeFileSafe } from '../utils.js';
+import { LEGACY_WORKSPACE_DIR } from '../../legacy.js';
 
 export function cmdIntent(name: string): void {
   if (changeExists(name)) {
@@ -23,15 +24,16 @@ export function cmdIntent(name: string): void {
   console.log('  └── intent.md');
   console.log('');
   console.log('💡  Next: review and approve the intent, then:');
-  console.log(`  loomkit spec ${name}`);
+  console.log(`  orca spec ${name}`);
 }
 
 function findIntentTemplate(): string {
-  // Try schemas in loomkit/ first
-  const schemasDir = join(process.cwd(), 'loomkit', 'schemas', 'spec-driven', 'templates');
-  const templatePath = join(schemasDir, 'intent.md');
-  if (existsSync(templatePath)) {
-    return readFileSync(templatePath, 'utf-8');
+  // Try schemas in orca/ first
+  for (const ws of ['orca', LEGACY_WORKSPACE_DIR]) {
+    const templatePath = join(process.cwd(), ws, 'schemas', 'spec-driven', 'templates', 'intent.md');
+    if (existsSync(templatePath)) {
+      return readFileSync(templatePath, 'utf-8');
+    }
   }
 
   // Try builtin schemas

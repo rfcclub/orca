@@ -1,5 +1,5 @@
 #!/bin/bash
-# Generate Codex-compatible instructions from LoomKit SKILL.md files
+# Generate Codex-compatible instructions from Orca SKILL.md files
 # Usage: ./generate-instructions.sh
 
 SKILLS_DIR="../../skills"
@@ -12,13 +12,13 @@ for skill_dir in "$SKILLS_DIR"/*/; do
   skill_file="$skill_dir/SKILL.md"
 
   if [ -f "$skill_file" ]; then
-    output_file="$OUTPUT_DIR/loomkit-${skill_name}.md"
+    output_file="$OUTPUT_DIR/orca-${skill_name}.md"
 
     # Extract description
     description=$(head -5 "$skill_file" | grep "^description:" | sed 's/description: //')
 
     # Format for Codex
-    echo "# LoomKit — ${skill_name^}" > "$output_file"
+    echo "# Orca — ${skill_name^}" > "$output_file"
     echo "" >> "$output_file"
     echo "**Trigger:** $description" >> "$output_file"
     echo "" >> "$output_file"

@@ -42,7 +42,7 @@ export function parseSpec(markdown: string): SpecTree {
   if (versionMatch) {
     schemaVersion = parseInt(versionMatch[1], 10);
     if (schemaVersion > MAX_SCHEMA_VERSION) {
-      warnings.push(`spec uses schema v${schemaVersion}, LoomKit supports up to v${MAX_SCHEMA_VERSION}`);
+      warnings.push(`spec uses schema v${schemaVersion}, Orca supports up to v${MAX_SCHEMA_VERSION}`);
     }
   }
 

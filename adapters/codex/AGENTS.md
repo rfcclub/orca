@@ -1,8 +1,8 @@
-# LoomKit — Codex Agent Instructions
+# Orca — Codex Agent Instructions
 
 ## Overview
 
-LoomKit is a spec-driven design framework with TDD enforcement. Follow the workflow phases in order.
+Orca is a spec-driven design framework with TDD enforcement. Follow the workflow phases in order.
 
 ## Workflow
 
@@ -12,7 +12,7 @@ Before any implementation:
 1. Ask one question at a time (Socratic dialogue)
 2. Understand: problem, constraints, existing solutions
 3. Propose 2-3 approaches with trade-offs
-4. Output: `loomkit/changes/<name>/proposal.md`
+4. Output: `orca/changes/<name>/proposal.md`
 
 ### SPEC — Write Requirements
 
@@ -21,7 +21,7 @@ Write structured specifications:
 - `#### Scenario: <name>` with WHEN/THEN format
 - No OR in scenarios — split into separate scenarios
 - Multiple AND clauses OK
-- Output: `loomkit/changes/<name>/specs/<name>/spec.md`
+- Output: `orca/changes/<name>/specs/<name>/spec.md`
 
 ### DESIGN — Technical Design
 
@@ -29,7 +29,7 @@ Write technical design:
 - Architecture decisions + rationale
 - Test strategy: map scenarios → test files
 - File structure changes
-- Output: `loomkit/changes/<name>/design.md`
+- Output: `orca/changes/<name>/design.md`
 
 ### PLAN — TDD Implementation Plan
 
@@ -39,7 +39,7 @@ Write bite-sized implementation plan:
 - NO placeholders, NO TBD, NO "implement later"
 - TDD cycle per step: write failing test → verify fail → implement → verify pass → commit
 - NO cross-task references ("similar to Task 1" is banned)
-- Output: `loomkit/changes/<name>/tasks.md`
+- Output: `orca/changes/<name>/tasks.md`
 
 ### TDD — Test-Driven Development
 
@@ -55,7 +55,7 @@ Iron Law: no code without failing test.
 Before archiving:
 - Check scenario coverage (SHALL/MUST = mandatory)
 - Run test suite
-- Generate `.loomkit-verify.json`
+- Generate `.orca-verify.json`
 - Must meet coverage threshold (default: 100%)
 - Force possible with explicit reason
 
@@ -63,9 +63,9 @@ Before archiving:
 
 After verify passes:
 - Merge delta specs into living specs
-- Living specs at `loomkit/specs/<name>/spec.md`
+- Living specs at `orca/specs/<name>/spec.md`
 - Archive metadata recorded
-- Output: merged specs + `loomkit/archive/` metadata
+- Output: merged specs + `orca/archive/` metadata
 
 ## TDD Enforcement
 
@@ -76,7 +76,7 @@ After verify passes:
 
 ## Config
 
-LoomKit reads `loomkit/config.yaml`:
+Orca reads `orca/config.yaml`:
 ```yaml
 schema: spec-driven
 tdd:

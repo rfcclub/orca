@@ -13,7 +13,7 @@ import type { PlanTask } from '../../src/harness/types.ts'
 let tmpDir: string
 
 beforeEach(() => {
-  tmpDir = join(tmpdir(), `loomkit-plan-${Date.now()}`)
+  tmpDir = join(tmpdir(), `orca-plan-${Date.now()}`)
   mkdirSync(tmpDir, { recursive: true })
 })
 

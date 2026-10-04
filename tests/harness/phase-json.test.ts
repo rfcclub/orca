@@ -15,7 +15,7 @@ import type { VerdictEntry } from '../../src/harness/types.ts'
 let tmpDir: string
 
 beforeEach(() => {
-  tmpDir = join(tmpdir(), `loomkit-pj-${Date.now()}`)
+  tmpDir = join(tmpdir(), `orca-pj-${Date.now()}`)
   mkdirSync(tmpDir, { recursive: true })
 })
 

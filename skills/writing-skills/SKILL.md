@@ -1,20 +1,20 @@
 ---
 name: writing-skills
-description: Use when creating new LoomKit skills, editing existing skills, or verifying skills follow the standard format before deployment
+description: Use when creating new Orca skills, editing existing skills, or verifying skills follow the standard format before deployment
 ---
 
 # Writing Skills
 
 ## Overview
 
-Create or edit LoomKit SKILL.md files following the standard format. Every skill must have frontmatter, clear trigger conditions, step-by-step instructions, and concrete deliverable.
+Create or edit Orca SKILL.md files following the standard format. Every skill must have frontmatter, clear trigger conditions, step-by-step instructions, and concrete deliverable.
 
 ## When to Use
 
-- Adding a new phase to the LoomKit workflow
+- Adding a new phase to the Orca workflow
 - Improving existing skill instructions
 - Verifying a skill follows the standard before archiving
-- Adapting a superpowers skill to LoomKit format
+- Adapting a superpowers skill to Orca format
 
 ## Skill Format
 

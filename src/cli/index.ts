@@ -29,26 +29,26 @@ switch (command) {
     cmdInit();
     break;
   case 'intent':
-    if (!args[0]) { console.error('Usage: loomkit intent <name>'); process.exit(1); }
+    if (!args[0]) { console.error('Usage: orca intent <name>'); process.exit(1); }
     cmdIntent(args[0]);
     break;
   case 'spec':
-    if (!args[0]) { console.error('Usage: loomkit spec <name>'); process.exit(1); }
+    if (!args[0]) { console.error('Usage: orca spec <name>'); process.exit(1); }
     cmdSpec(args[0]);
     break;
   case 'design':
-    if (!args[0]) { console.error('Usage: loomkit design <name>'); process.exit(1); }
+    if (!args[0]) { console.error('Usage: orca design <name>'); process.exit(1); }
     cmdDesign(args[0]);
     break;
   case 'plan':
-    if (!args[0]) { console.error('Usage: loomkit plan <name>'); process.exit(1); }
+    if (!args[0]) { console.error('Usage: orca plan <name>'); process.exit(1); }
     cmdPlan(args[0]);
     break;
   case 'verify':
     cmdVerify(args[0] || undefined, { skip: process.argv.includes('--skip-state-check') });
     break;
   case 'archive':
-    if (!args[0]) { console.error('Usage: loomkit archive <name> [--force --reason="..."]'); process.exit(1); }
+    if (!args[0]) { console.error('Usage: orca archive <name> [--force --reason="..."]'); process.exit(1); }
     const force = process.argv.includes('--force');
     const reasonIdx = process.argv.indexOf('--reason');
     const reason = reasonIdx >= 0 ? process.argv[reasonIdx + 1] : '';
@@ -65,15 +65,15 @@ switch (command) {
     await cmdStatus();
     break;
   case 'adapt':
-    if (!args[0]) { console.error('Usage: loomkit adapt <tool> (claude-code | codex)'); process.exit(1); }
+    if (!args[0]) { console.error('Usage: orca adapt <tool> (claude-code | codex)'); process.exit(1); }
     cmdAdapt(args[0]);
     break;
   case 'self-check':
-    if (!args[0]) { console.error('Usage: loomkit self-check <name>'); process.exit(1); }
+    if (!args[0]) { console.error('Usage: orca self-check <name>'); process.exit(1); }
     cmdSelfCheck(args[0]);
     break;
   case 'gate-code':
-    if (!args[0]) { console.error('Usage: loomkit gate-code <name> [--skip-state-check] [--llm [provider]]'); process.exit(1); }
+    if (!args[0]) { console.error('Usage: orca gate-code <name> [--skip-state-check] [--llm [provider]]'); process.exit(1); }
     {
       const llmIdx = args.indexOf('--llm')
       const llm = llmIdx >= 0 ? (args[llmIdx + 1] && !args[llmIdx + 1].startsWith('-') ? args[llmIdx + 1] : '') : undefined
@@ -81,18 +81,18 @@ switch (command) {
     }
     break;
   case 'craft':
-    if (!args[0]) { console.error('Usage: loomkit craft <name>'); process.exit(1); }
+    if (!args[0]) { console.error('Usage: orca craft <name>'); process.exit(1); }
     cmdCraft(args[0]);
     break;
   case 'gate-pipeline':
     cmdGatePipeline();
     break;
   case 'learn':
-    if (!args[0]) { console.error('Usage: loomkit learn <name>'); process.exit(1); }
+    if (!args[0]) { console.error('Usage: orca learn <name>'); process.exit(1); }
     cmdLearn(args[0]);
     break;
   case 'plan-json':
-    if (!args[0] || !args[1]) { console.error('Usage: loomkit plan-json <init|add|start|complete|finish|show> <name> [options]'); process.exit(1); }
+    if (!args[0] || !args[1]) { console.error('Usage: orca plan-json <init|add|start|complete|finish|show> <name> [options]'); process.exit(1); }
     await cmdPlanJson(args[0], args[1], args.slice(2));
     break;
   case 'issue':
@@ -117,12 +117,12 @@ main().catch(err => { console.error(err); process.exit(1); });
 
 function printHelp(): void {
   console.log(`
-LoomKit — Harness Engineering Framework
+Orca — Harness Engineering Framework
 
-Usage: loomkit <command> [options]
+Usage: orca <command> [options]
 
 Workflow commands:
-  init                    Scaffold loomkit/ directory
+  init                    Scaffold orca/ directory
   intent <name>           Create an intent artifact (problem, outcome, non-goals)
   spec <name>             Create a new change with proposal + spec
   design <name>           Add design.md to existing change

@@ -1,11 +1,11 @@
-# LoomKit — Claude Code Adapter
+# Orca — Claude Code Adapter
 
-Integrates LoomKit's spec-driven workflow into Claude Code via `CLAUDE.md` and skill files in `~/.claude/skills/`.
+Integrates Orca's spec-driven workflow into Claude Code via `CLAUDE.md` and skill files in `~/.claude/skills/`.
 
 ## How It Works
 
 - **`CLAUDE.md`** — placed at project root, Claude Code reads it automatically for project-level instructions. Defines workflow commands (`/lk:*`), skill references, TDD enforcement rules.
-- **`~/.claude/skills/loomkit-*/SKILL.md`** — per-phase instructions that Claude Code loads as domain skills. One per workflow phase (brainstorm, spec, design, plan, tdd, verify, archive).
+- **`~/.claude/skills/orca-*/SKILL.md`** — per-phase instructions that Claude Code loads as domain skills. One per workflow phase (brainstorm, spec, design, plan, tdd, verify, archive).
 
 ## Setup
 
@@ -16,17 +16,17 @@ Integrates LoomKit's spec-driven workflow into Claude Code via `CLAUDE.md` and s
 
 2. **Install skill files:**
    ```bash
-   cd <your-project>   # must have loomkit/ directory
+   cd <your-project>   # must have orca/ directory
    bash adapters/claude-code/generate-skills.sh
    ```
 
 3. **Verify installation:**
    ```bash
-   ls ~/.claude/skills/loomkit-*/
+   ls ~/.claude/skills/orca-*/
    ```
    Should show 7 skill directories.
 
-4. **Confirm `loomkit/config.yaml` exists** (scaffold with `loomkit init` when CLI is available).
+4. **Confirm `orca/config.yaml` exists** (scaffold with `orca init` when CLI is available).
 
 ## Usage
 
@@ -44,17 +44,17 @@ In Claude Code chat, use slash commands:
 
 ## Updating Skills
 
-If LoomKit skills are updated, re-run:
+If Orca skills are updated, re-run:
 
 ```bash
 bash adapters/claude-code/generate-skills.sh
 ```
 
-This overwrites only the LoomKit skills in `~/.claude/skills/loomkit-*/`.
+This overwrites only the Orca skills in `~/.claude/skills/orca-*/`.
 
 ## Notes
 
 - Claude Code loads `CLAUDE.md` automatically when present in the project root.
-- Skill files in `~/.claude/skills/loomkit-*` are auto-discovered by Claude Code.
+- Skill files in `~/.claude/skills/orca-*` are auto-discovered by Claude Code.
 - The `generate-skills.sh` script is safe to re-run (idempotent).
-- To remove a skill, delete its directory: `rm -rf ~/.claude/skills/loomkit-<name>`.
+- To remove a skill, delete its directory: `rm -rf ~/.claude/skills/orca-<name>`.

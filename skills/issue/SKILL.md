@@ -7,7 +7,7 @@ description: Use when an intent should become a GitHub issue, or when preparing 
 
 ## Overview
 
-A GitHub issue typed `bug` or `enhancement` is the draft intent; a human approves it, then orca freezes it. Agents author issues, they never approve them. Two commands cover the agent side. The CLI binary is `loomkit` until the rename to `orca` lands.
+A GitHub issue typed `bug` or `enhancement` is the draft intent; a human approves it, then orca freezes it. Agents author issues, they never approve them. Two commands cover the agent side.
 
 ## When to Use
 
@@ -17,7 +17,7 @@ A GitHub issue typed `bug` or `enhancement` is the draft intent; a human approve
 ## Create one issue from a change
 
 ```
-loomkit issue create --from-change <name> --shape <bug|enhancement> [--title "<t>"] [--dry-run] [--repo owner/name]
+orca issue create --from-change <name> --shape <bug|enhancement> [--title "<t>"] [--dry-run] [--repo owner/name]
 ```
 
 - Reads `openspec/changes/<name>/intent.md`; the body is that text as written. Nothing is filled in.
@@ -30,7 +30,7 @@ loomkit issue create --from-change <name> --shape <bug|enhancement> [--title "<t
 ## Prepare a repo
 
 ```
-loomkit issue init --reviewer <login> [--reviewer <login>] [--agent <login>] [--force] [--repo owner/name]
+orca issue init --reviewer <login> [--reviewer <login>] [--agent <login>] [--force] [--repo owner/name]
 ```
 
 - Ensures the `orca:*` labels and `orca:approved`, writes `.github/workflows/orca-issue.yml` and `openspec/actors.yaml`. Run it from the repo root.

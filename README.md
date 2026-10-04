@@ -1,8 +1,10 @@
-# LoomKit
+# Orca
 
 Intent-guided spec-driven design framework with TDD superpowers. For AI agents and humans.
 
-## Why LoomKit?
+> Formerly LoomKit. Repos created with LoomKit keep working: the old `.loomkit-verify.json` and `loomkit/` workspace directory are still read.
+
+## Why Orca?
 
 AI agents building software fail the same ways, repeatedly:
 
@@ -17,7 +19,7 @@ AI agents building software fail the same ways, repeatedly:
   decision was made, what was explicitly out of scope, what's still
   unverified.
 
-LoomKit is a set of gates that catch these before they ship:
+Orca is a set of gates that catch these before they ship:
 
 - **Intent Gate** — separates the real problem from the proposed
   solution, captures non-goals and ambiguities, *before* a spec exists.
@@ -26,14 +28,14 @@ LoomKit is a set of gates that catch these before they ship:
   doesn't ship.
 - **TDD Iron Law** — no production code without a failing test first,
   enforced by the workflow, not a reminder in a doc.
-- **`loomkit verify`** — mechanically checks every SHALL/MUST scenario
-  has a passing test and writes `.loomkit-verify.json`, instead of
+- **`orca verify`** — mechanically checks every SHALL/MUST scenario
+  has a passing test and writes `.orca-verify.json`, instead of
   trusting the agent's word.
 - **Everything is markdown + JSON, git-tracked** — a human reviews the
   actual spec/plan/verify report and approves via a normal git merge,
   not a chat summary.
 
-> **Two install tags.** `npm install @gotako/loomkit` (default) is the
+> **Two install tags.** `npm install @gotako/orca` (default) is the
 > stable spec-driven workflow below. `@beta` pulls in beta dependency
 > versions for the wider harness pipeline instead — expect crashes and
 > breaking changes without notice on that tag.
@@ -48,16 +50,16 @@ LoomKit is a set of gates that catch these before they ship:
 
 ```bash
 # Install
-pnpm add -g @gotako/loomkit
+pnpm add -g @gotako/orca
 # OR use from repo
-cd ~/repo/loomkit
+cd ~/repo/orca
 pnpm build
 
 # Use in any project
 mkdir my-project && cd my-project
-loomkit init
-loomkit intent my-feature   # separate problem from solution first
-loomkit spec my-feature
+orca init
+orca intent my-feature   # separate problem from solution first
+orca spec my-feature
 ```
 
 ## Workflow
@@ -73,23 +75,23 @@ intent → brainstorm → spec → design → plan → tdd → verify → archiv
 
 | Command | Description |
 |---------|-------------|
-| `loomkit init` | Scaffold loomkit/ directory |
-| `loomkit intent <name>` | Create intent artifact (problem, outcome, non-goals) |
-| `loomkit spec <name>` | Create change with proposal + spec |
-| `loomkit design <name>` | Add technical design |
-| `loomkit plan <name>` | Add TDD implementation plan |
-| `loomkit verify [name]` | Run coverage gate |
-| `loomkit archive <name>` | Archive verified change |
-| `loomkit status` | Show all changes + coverage |
-| `loomkit show [name]` | Show change details (all if no name) |
-| `loomkit adapt <tool>` | Show adapter setup |
-| `loomkit self-check <name>` | Scaffold self-check.md (claims, evidence, limitations) |
-| `loomkit gate-code <name>` | Run SEAL gate on current diff |
-| `loomkit craft <name>` | Show craft review verdict (maintainability) |
-| `loomkit gate-pipeline` | Aggregate all change verdicts → SHIP/HOLD/ESCALATE |
-| `loomkit learn <name>` | Extract lessons from gate history |
-| `loomkit plan-json <action> <name>` | Weak-model task list (init/add/start/complete/finish/show) |
-| `loomkit publish [--dry-run]` | Publish current version to npm |
+| `orca init` | Scaffold orca/ directory |
+| `orca intent <name>` | Create intent artifact (problem, outcome, non-goals) |
+| `orca spec <name>` | Create change with proposal + spec |
+| `orca design <name>` | Add technical design |
+| `orca plan <name>` | Add TDD implementation plan |
+| `orca verify [name]` | Run coverage gate |
+| `orca archive <name>` | Archive verified change |
+| `orca status` | Show all changes + coverage |
+| `orca show [name]` | Show change details (all if no name) |
+| `orca adapt <tool>` | Show adapter setup |
+| `orca self-check <name>` | Scaffold self-check.md (claims, evidence, limitations) |
+| `orca gate-code <name>` | Run SEAL gate on current diff |
+| `orca craft <name>` | Show craft review verdict (maintainability) |
+| `orca gate-pipeline` | Aggregate all change verdicts → SHIP/HOLD/ESCALATE |
+| `orca learn <name>` | Extract lessons from gate history |
+| `orca plan-json <action> <name>` | Weak-model task list (init/add/start/complete/finish/show) |
+| `orca publish [--dry-run]` | Publish current version to npm |
 
 ## Skills
 
@@ -108,7 +110,7 @@ intent → brainstorm → spec → design → plan → tdd → verify → archiv
 | Verification | `skills/verification-before-completion/SKILL.md` | Evidence before assertions |
 | Finishing Branch | `skills/finishing-branch/SKILL.md` | Merge/PR/cleanup options |
 | Parallel Agents | `skills/parallel-agents/SKILL.md` | Dispatch independent tasks in parallel |
-| Writing Skills | `skills/writing-skills/SKILL.md` | Create and review LoomKit skills |
+| Writing Skills | `skills/writing-skills/SKILL.md` | Create and review Orca skills |
 | Systematic Debugging | `skills/systematic-debugging/SKILL.md` | Root-cause any bug/test failure before proposing a fix |
 | Requesting Code Review | `skills/requesting-code-review/SKILL.md` | Dispatch a reviewer subagent before merging |
 | Receiving Code Review | `skills/receiving-code-review/SKILL.md` | Verify feedback before implementing it |
@@ -137,7 +139,7 @@ pnpm test     # Run 65+ tests
 
 ## Ecosystem
 
-LoomKit is part of a larger harness pipeline — see
+Orca is part of a larger harness pipeline — see
 **[HARNESS.md](./HARNESS.md)** for how it fits with pilotfish,
 seal-gate, and hammerhead-debug.
 
