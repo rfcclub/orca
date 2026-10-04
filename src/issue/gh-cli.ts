@@ -83,6 +83,19 @@ export class GhCliPort implements GitHubPort {
     await this.exec(['api', '-X', 'PATCH', this.api(`issues/comments/${commentId}`), '--input', '-'], JSON.stringify({ body }));
   }
 
+  async createIssue(input: { title: string; body: string; labels: string[] }): Promise<{ number: number }> {
+    const raw = JSON.parse(await this.exec(['api', '-X', 'POST', this.api('issues'), '--input', '-'], JSON.stringify(input)));
+    return { number: raw.number };
+  }
+
+  async ensureLabel(name: string, color: string, description: string): Promise<void> {
+    try {
+      await this.exec(['api', '-X', 'POST', this.api('labels'), '--input', '-'], JSON.stringify({ name, color, description }));
+    } catch (e) {
+      if (!/already_exists/i.test(e instanceof Error ? e.message : String(e))) throw e;
+    }
+  }
+
   async readDefaultBranchFile(path: string): Promise<string | null> {
     const segments = path.split('/');
     if (path.startsWith('/') || segments.some(s => s === '..' || s === '')) {

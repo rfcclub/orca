@@ -152,6 +152,10 @@ Issue commands (GitHub issue as the intent of record):
   issue draft <n> [--post]  Draft missing sections as tagged lines (needs drafting.provider)
   issue open <n> --name <change>
                           Create the change folder from an approved issue
+  issue create --from-change <name> --shape <bug|enhancement> [--title <t>] [--dry-run]
+                          Create one issue from a change's intent.md (once; never approved)
+  issue init --reviewer <login> [--agent <login>] [--force]
+                          Set up a repo: orca labels, workflow, openspec/actors.yaml
   gha run                 GitHub Action entry point (reads the event payload; sets labels/comments)
 
 Other:

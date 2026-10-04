@@ -7,6 +7,9 @@ export class FakeGitHub implements GitHubPort {
   private comments = new Map<number, Comment[]>();
   private files = new Map<string, string>();
   private nextCommentId = 1;
+  private nextIssueNumber = 100;
+  readonly labelsEnsured: string[] = [];
+  readonly created: Array<{ number: number; title: string; body: string; labels: string[] }> = [];
   private failure: Error | null = null;
 
   addIssue(issue: Issue): void {
@@ -93,5 +96,18 @@ export class FakeGitHub implements GitHubPort {
   async readDefaultBranchFile(path: string): Promise<string | null> {
     this.enter(`readDefaultBranchFile:${path}`);
     return this.files.get(path) ?? null;
+  }
+
+  async createIssue(input: { title: string; body: string; labels: string[] }): Promise<{ number: number }> {
+    this.enter('createIssue');
+    const number = this.nextIssueNumber++;
+    this.created.push({ number, ...input, labels: [...input.labels] });
+    this.issues.set(number, { number, author: 'orca[bot]', labels: [...input.labels], body: input.body });
+    return { number };
+  }
+
+  async ensureLabel(name: string, _color: string, _description: string): Promise<void> {
+    this.enter(`ensureLabel:${name}`);
+    if (!this.labelsEnsured.includes(name)) this.labelsEnsured.push(name);
   }
 }

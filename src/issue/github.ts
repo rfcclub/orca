@@ -11,6 +11,9 @@ export interface GitHubPort {
   listComments(number: number): Promise<Comment[]>;
   createComment(number: number, body: string): Promise<Comment>;
   updateComment(commentId: number, body: string): Promise<void>;
+  createIssue(input: { title: string; body: string; labels: string[] }): Promise<{ number: number }>;
+  /** Creates the label when missing; an existing label is left as it is. */
+  ensureLabel(name: string, color: string, description: string): Promise<void>;
   /** Content of a file on the default branch, or null when it does not exist. */
   readDefaultBranchFile(path: string): Promise<string | null>;
 }
