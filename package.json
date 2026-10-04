@@ -1,5 +1,5 @@
 {
-  "name": "@gotako/loomkit",
+  "name": "@gotako/orca",
   "version": "1.6.2-beta.0",
   "description": "Intent-guided spec-driven design framework with TDD superpowers — Intent → Spec → TDD → Trust",
   "type": "module",

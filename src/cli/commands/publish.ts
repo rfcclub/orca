@@ -18,7 +18,7 @@ export function cmdPublish(options: { dryRun?: boolean }): void {
     } catch {}
 
     console.log('\n  🔍 Dry run — not publishing.');
-    console.log('  To publish: loomkit publish');
+    console.log('  To publish: orca publish');
     return;
   }
 

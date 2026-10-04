@@ -5,7 +5,7 @@ This file is created to test the GitHub Actions verify workflow.
 ## Purpose
 
 - Trigger pull_request event
-- Verify that `pnpm build` and `loomkit verify` run successfully in CI
+- Verify that `pnpm build` and `orca verify` run successfully in CI
 - Confirm CI/CD pipeline is working
 
 ## Expected Behavior

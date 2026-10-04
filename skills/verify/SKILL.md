@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Use when checking scenario coverage, running test suite, and producing .loomkit-verify.json gate output
+description: Use when checking scenario coverage, running test suite, and producing .orca-verify.json gate output
 ---
 
 # Verify
@@ -30,7 +30,7 @@ Check that all SHALL/MUST scenarios have passing tests, run the test suite, and 
    - Per scenario: status (pass/fail/untested)
    - Overall coverage percentage
    - Gate: pass/fail
-4. **Write `.loomkit-verify.json`** in `changes/<name>/`:
+4. **Write `.orca-verify.json`** in `changes/<name>/`:
    ```json
    {
      "change": "<name>",
@@ -52,7 +52,7 @@ Check that all SHALL/MUST scenarios have passing tests, run the test suite, and 
 
 ## Output
 
-- `.loomkit-verify.json` in change directory
+- `.orca-verify.json` in change directory
 
 ## Validation
 

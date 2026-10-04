@@ -1,6 +1,6 @@
 // Minimal ambient declaration for `seal-gate`, a sibling package (file:../seal-gate)
 // that ships TypeScript sources without a `types` field in its package.json.
-// Only the surface area used by loomkit (src/harness/gate-code.ts) is declared.
+// Only the surface area used by orca (src/harness/gate-code.ts) is declared.
 // If seal-gate later ships its own types, this shim can be removed.
 declare module 'seal-gate' {
   export interface ScoreBreakdown {

@@ -80,7 +80,7 @@ jobs:
           gh release create "v${{ steps.vars.outputs.version }}" \
             --repo "${{ github.repository }}" \
             --title "v${{ steps.vars.outputs.version }}" \
-            --notes "npm: \`npm install @gotako/loomkit@${{ steps.vars.outputs.version }}\` (dist-tag: \`${{ steps.vars.outputs.npm_tag }}\`)
+            --notes "npm: \`npm install @gotako/orca@${{ steps.vars.outputs.version }}\` (dist-tag: \`${{ steps.vars.outputs.npm_tag }}\`)
 
           Dependencies:
           - \`@gotako/hammerhead-debug@${{ steps.vars.outputs.hammerhead_version }}\`

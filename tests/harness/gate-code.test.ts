@@ -35,9 +35,9 @@ function writePlan(tasks: PlanTask[]): void {
 }
 
 beforeEach(() => {
-  tmpDir = join(tmpdir(), `loomkit-gate-code-${Date.now()}-${Math.random().toString(36).slice(2)}`)
-  // Real changeDir shape is <projectRoot>/openspec/changes/<name> (or loomkit/changes/<name>) —
-  // TWO levels under projectRoot, not one. Caught live 2026-08-04 running `loomkit gate-code`
+  tmpDir = join(tmpdir(), `orca-gate-code-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+  // Real changeDir shape is <projectRoot>/openspec/changes/<name> (or orca/changes/<name>) —
+  // TWO levels under projectRoot, not one. Caught live 2026-08-04 running `orca gate-code`
   // for real (not mocked) against a real scratch project: the old code's `join(changeDir, '..')`
   // resolved to <projectRoot>/openspec/changes instead of <projectRoot>, so every task.test file
   // silently "not found." projectRoot is now explicit (matches PlanGuard's own convention), and
@@ -163,7 +163,7 @@ describe('probePlanTasks', () => {
     // fixture is written at tmpDir/thing.test.ts (see beforeEach). Before the fix, the code
     // resolved task.test against join(changeDir, '..') = tmpDir/openspec/changes — one level
     // short — and every real task.test lookup failed with "test file not found", silently, even
-    // though the file genuinely existed. This is the exact failure `loomkit gate-code` produced
+    // though the file genuinely existed. This is the exact failure `orca gate-code` produced
     // live against a real scratch project, 2026-08-04.
     writePlan([baseTask({})])
     let sawTestFile: string | undefined

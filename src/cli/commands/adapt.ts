@@ -1,10 +1,10 @@
 import { join } from 'path';
 import { existsSync, readdirSync } from 'fs';
-import { getLoomKitDir } from '../utils.js';
+import { getWorkspaceDir } from '../utils.js';
 
 export function cmdAdapt(tool: string): void {
-  const loomkitDir = getLoomKitDir();
-  const adaptersDir = join(loomkitDir, 'adapters');
+  const workspaceDir = getWorkspaceDir();
+  const adaptersDir = join(workspaceDir, 'adapters');
 
   const validTools = ['claude-code', 'codex'];
 
@@ -15,11 +15,11 @@ export function cmdAdapt(tool: string): void {
 
   const adapterDir = join(adaptersDir, tool);
   if (!existsSync(adapterDir)) {
-    console.error(`✗  Adapter for "${tool}" not found. Check loomkit/adapters/`);
+    console.error(`✗  Adapter for "${tool}" not found. Check orca/adapters/`);
     process.exit(1);
   }
 
-  console.log(`\n✓  LoomKit adapter for ${tool}:`);
+  console.log(`\n✓  Orca adapter for ${tool}:`);
   console.log(`  ${adapterDir}/`);
 
   const files = readdirSync(adapterDir);

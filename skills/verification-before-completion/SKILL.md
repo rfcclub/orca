@@ -12,7 +12,7 @@ NEVER claim something is done without evidence. Run the verification commands, r
 ## When to Use
 
 - Before marking a task `[x]` in tasks.md
-- Before running `loomkit verify`
+- Before running `orca verify`
 - Before claiming a bug is fixed
 - Before committing with "fixes" or "completes" in the message
 - Before telling a human "it's done"

@@ -1,6 +1,6 @@
-# LoomKit — Codex Integration
+# Orca — Codex Integration
 
-This adapter configures LoomKit for use with OpenAI Codex agents.
+This adapter configures Orca for use with OpenAI Codex agents.
 
 ## Setup
 

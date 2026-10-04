@@ -20,7 +20,7 @@ function hasFlag(args: string[], name: string): boolean {
 
 function requireChangeDir(name: string): string {
   if (!changeExists(name)) {
-    console.error(`✗  Change "${name}" not found. Run "loomkit intent ${name}" first.`);
+    console.error(`✗  Change "${name}" not found. Run "orca intent ${name}" first.`);
     process.exit(1);
   }
   return getChangeDir(name);
@@ -37,7 +37,7 @@ function requireTask(taskId: string, tasks: PlanTask[]): PlanTask {
 
 export async function cmdPlanJson(action: string, name: string | undefined, args: string[]): Promise<void> {
   if (!name) {
-    console.error('Usage: loomkit plan-json <init|add|start|complete|finish|show> <name> [options]');
+    console.error('Usage: orca plan-json <init|add|start|complete|finish|show> <name> [options]');
     process.exit(1);
   }
 
@@ -62,7 +62,7 @@ export async function cmdPlanJson(action: string, name: string | undefined, args
       break;
     default:
       console.error(`Unknown plan-json action: ${action}`);
-      console.error('Usage: loomkit plan-json <init|add|start|complete|finish|show> <name> [options]');
+      console.error('Usage: orca plan-json <init|add|start|complete|finish|show> <name> [options]');
       process.exit(1);
   }
 }
@@ -78,7 +78,7 @@ function cmdInit(name: string, args: string[]): void {
   const trace = flag(args, 'trace');
   const resolvedBy = flag(args, 'resolved-by');
   if (!trace || !resolvedBy) {
-    console.error('Usage: loomkit plan-json init <name> --trace <INTENT-ID> --resolved-by <name>');
+    console.error('Usage: orca plan-json init <name> --trace <INTENT-ID> --resolved-by <name>');
     process.exit(1);
   }
 
@@ -87,7 +87,7 @@ function cmdInit(name: string, args: string[]): void {
   writePlanJson(changeDir, plan);
 
   console.log(`✓  Created plan.json for "${name}" — traces to ${trace} (resolved by ${resolvedBy})`);
-  console.log(`  Next: loomkit plan-json add ${name} --id TASK-1 --behavior "..." --acceptance "..." --files a.ts --test tests/a.test.ts`);
+  console.log(`  Next: orca plan-json add ${name} --id TASK-1 --behavior "..." --acceptance "..." --files a.ts --test tests/a.test.ts`);
 }
 
 function cmdAdd(name: string, args: string[]): void {
@@ -102,7 +102,7 @@ function cmdAdd(name: string, args: string[]): void {
   const consumesArg = flag(args, 'consumes');
 
   if (!id || !behavior || !acceptance || !filesArg || !test) {
-    console.error('Usage: loomkit plan-json add <name> --id <id> --behavior "..." --acceptance "..." --files a.ts,b.ts --test tests/a.test.ts [--consumes path1,path2]');
+    console.error('Usage: orca plan-json add <name> --id <id> --behavior "..." --acceptance "..." --files a.ts,b.ts --test tests/a.test.ts [--consumes path1,path2]');
     process.exit(1);
   }
 
@@ -139,7 +139,7 @@ function cmdAdd(name: string, args: string[]): void {
 function cmdStart(name: string, taskId: string | undefined, args: string[]): void {
   const changeDir = requireChangeDir(name);
   if (!taskId) {
-    console.error('Usage: loomkit plan-json start <name> <task-id> [--skip-state-check]');
+    console.error('Usage: orca plan-json start <name> <task-id> [--skip-state-check]');
     process.exit(1);
   }
   const plan = readPlanJson(changeDir);
@@ -175,7 +175,7 @@ function cmdStart(name: string, taskId: string | undefined, args: string[]): voi
 function cmdComplete(name: string, taskId: string | undefined, args: string[]): void {
   const changeDir = requireChangeDir(name);
   if (!taskId) {
-    console.error('Usage: loomkit plan-json complete <name> <task-id> --test-cmd "<command>" [--debug-session <id> --debug-cycle <id> --root-cause "..."] [--escalated]');
+    console.error('Usage: orca plan-json complete <name> <task-id> --test-cmd "<command>" [--debug-session <id> --debug-cycle <id> --root-cause "..."] [--escalated]');
     process.exit(1);
   }
   const plan = readPlanJson(changeDir);
@@ -183,7 +183,7 @@ function cmdComplete(name: string, taskId: string | undefined, args: string[]): 
 
   const testCmd = flag(args, 'test-cmd');
   if (!testCmd) {
-    console.error('Usage: loomkit plan-json complete <name> <task-id> --test-cmd "<command>" [--debug-session <id> --debug-cycle <id> --root-cause "..."] [--escalated]');
+    console.error('Usage: orca plan-json complete <name> <task-id> --test-cmd "<command>" [--debug-session <id> --debug-cycle <id> --root-cause "..."] [--escalated]');
     process.exit(1);
   }
 
@@ -273,7 +273,7 @@ function cmdFinish(name: string, _args: string[]): void {
 
   recordPhaseComplete(changeDir, 'apply', [], produced, { type: 'tool', marker: 'plan.json:all_tasks_complete' });
   console.log(`✓  All ${plan.tasks.length} task(s) complete — phase.json "apply" phase closed`);
-  console.log(`  Next: loomkit gate-code ${name}`);
+  console.log(`  Next: orca gate-code ${name}`);
 }
 
 function cmdShow(name: string): void {

@@ -5,7 +5,7 @@ import { tmpdir } from 'os';
 import { readPlanJson, findProducerTask, type PlanJson } from '../src/index.js';
 
 // Pilotfish (a sibling package, @gotako/pilotfish) depends on this exact export —
-// its own intent.md requires reading plan.json "through loomkit rather than
+// its own intent.md requires reading plan.json "through orca rather than
 // re-parsing it independently." Regression coverage for the gap found and fixed
 // 2026-08-06/07: src/index.ts exported the older spec-driven API only, nothing
 // from src/harness/, so that constraint was unsatisfiable until this export existed.
@@ -13,7 +13,7 @@ import { readPlanJson, findProducerTask, type PlanJson } from '../src/index.js';
 let tmpDir: string;
 
 beforeEach(() => {
-  tmpDir = join(tmpdir(), `loomkit-public-api-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  tmpDir = join(tmpdir(), `orca-public-api-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(tmpDir, { recursive: true });
 });
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loadConfig, type LoomKitConfig } from '../src/config/loader.js';
+import { loadConfig, type OrcaConfig } from '../src/config/loader.js';
 
 describe('Config System', () => {
   it('applies all defaults on empty config', () => {
@@ -28,10 +28,10 @@ describe('Config System', () => {
   });;
 
   it('substitutes env vars', () => {
-    process.env.TEST_LOOMKIT_CMD = 'my-custom-runner';
-    const config = loadConfig(`tdd:\n  framework: custom\n  command: \${TEST_LOOMKIT_CMD}\n`);
+    process.env.TEST_ORCA_CMD = 'my-custom-runner';
+    const config = loadConfig(`tdd:\n  framework: custom\n  command: \${TEST_ORCA_CMD}\n`);
     expect(config.tdd.command).toBe('my-custom-runner');
-    delete process.env.TEST_LOOMKIT_CMD;
+    delete process.env.TEST_ORCA_CMD;
   });
 
   it('errors on undefined env var', () => {

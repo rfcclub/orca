@@ -1,4 +1,4 @@
-# LoomKit — Usage Guide
+# Orca — Usage Guide
 
 Intent-guided spec-driven design framework with TDD superpowers. Built for AI agents and humans working together.
 
@@ -10,7 +10,7 @@ Intent-guided spec-driven design framework with TDD superpowers. Built for AI ag
 
 ## Table of Contents
 
-1. [What is LoomKit?](#what-is-loomkit)
+1. [What is Orca?](#what-is-orca)
 2. [Install](#install)
 3. [Workflow Overview](#workflow-overview)
 4. [Using the CLI](#using-the-cli)
@@ -25,19 +25,19 @@ Intent-guided spec-driven design framework with TDD superpowers. Built for AI ag
 
 ---
 
-## What is LoomKit?
+## What is Orca?
 
-LoomKit is a collaboration framework between AI agents and humans, combining:
+Orca is a collaboration framework between AI agents and humans, combining:
 
 - **OpenSpec** — the propose → spec → design → tasks → apply → archive workflow, living specs, delta spec merge
 - **Superpowers** — the TDD Iron Law (RED/GREEN/REFACTOR), bite-sized tasks with exact code, a verification gate
-- **Intent Gate** — separates the problem from the proposed solution before writing a spec (LoomKit original)
+- **Intent Gate** — separates the problem from the proposed solution before writing a spec (Orca original)
 
 **Core idea:** Everything is markdown, git-trackable. Humans read the spec, review the plan, approve via git merge. Agents execute each phase according to a SKILL.md.
 
 **Tagline:** Intent → Spec → TDD → Trust
 
-### When to use LoomKit?
+### When to use Orca?
 
 - A feature has a complex spec and needs human review before code
 - A project has multiple agents collaborating and needs a standard workflow
@@ -58,16 +58,16 @@ LoomKit is a collaboration framework between AI agents and humans, combining:
 ### Global Install (npm/pnpm)
 
 ```bash
-pnpm add -g @gotako/loomkit
+pnpm add -g @gotako/orca
 # or
-npm install -g @gotako/loomkit
+npm install -g @gotako/orca
 ```
 
 ### From Source
 
 ```bash
 git clone <repo-url>
-cd loomkit
+cd orca
 pnpm install
 pnpm build        # TypeScript compile
 pnpm test         # run the test suite
@@ -76,8 +76,8 @@ pnpm test         # run the test suite
 ### Verify Installation
 
 ```bash
-loomkit --help
-# Output: LoomKit — Intent-Guided Spec-Driven Design Framework with TDD Superpowers
+orca --help
+# Output: Orca — Intent-Guided Spec-Driven Design Framework with TDD Superpowers
 ```
 
 ---
@@ -105,7 +105,7 @@ intent.md  proposal.md  spec.md design  tasks   code   verify   archive/
 | **Design** | Architecture, data model, test strategy | Review design | `design.md` |
 | **Plan** | Bite-sized tasks with exact code, TDD cycle | Review plan, approve | `tasks.md` |
 | **TDD** | RED → GREEN → REFACTOR — code + tests | (wait for result) | Code + `.traceability.yaml` |
-| **Verify** | Scenario coverage gate + run test suite + intent coverage | Review verify report | `.loomkit-verify.json` |
+| **Verify** | Scenario coverage gate + run test suite + intent coverage | Review verify report | `.orca-verify.json` |
 | **Archive** | Merge delta spec into living spec, validate before merge | Git merge + tag | Archive metadata |
 
 ---
@@ -113,190 +113,190 @@ intent.md  proposal.md  spec.md design  tasks   code   verify   archive/
 ## Using the CLI
 
 **Workspace directory naming:** every command resolves its workspace
-dir the same way (`getLoomKitDir()` in `src/cli/utils.ts`): if a
+dir the same way (`getWorkspaceDir()` in `src/cli/utils.ts`): if a
 directory named `openspec/` already exists in the project root, it's
 used — this is intentional, for compatibility with the OpenSpec CLI's
-own convention. Otherwise LoomKit falls back to `loomkit/`, which is
-what `loomkit init` scaffolds on a brand-new project. This repo's own
-workspace lives in `openspec/` (its old `loomkit/` was retired). Every
-`loomkit/...` path below reads as `<loomkit/ or openspec/>/...`
+own convention. Otherwise Orca falls back to `orca/`, which is
+what `orca init` scaffolds on a brand-new project. This repo's own
+workspace lives in `openspec/` (its old `orca/` was retired). Every
+`orca/...` path below reads as `<orca/ or openspec/>/...`
 depending on which one exists in your project.
 
-### loomkit init
+### orca init
 
-Creates the workspace structure (`loomkit/` by default) in a project:
+Creates the workspace structure (`orca/` by default) in a project:
 
 ```bash
 cd my-project
-loomkit init
+orca init
 ```
 
 Produces:
 ```
-loomkit/
+orca/
 ├── config.yaml              # default config
 └── schemas/                 # schema files
 ```
 
-### loomkit intent <name>
+### orca intent <name>
 
 Creates the intent artifact — required for a workflow with the Intent Gate:
 
 ```bash
-loomkit intent user-auth
+orca intent user-auth
 ```
 
-Creates `loomkit/changes/user-auth/intent.md` with 15 sections: Raw Request, Problem, Desired Outcome, Users/Actors, Current Context, Proposed Direction, Scope, Non-Goals, Constraints, Success Criteria, Risks, Ambiguities (Blocking + Non-Blocking), Assumptions, Spec Seeds, Intent Approval.
+Creates `orca/changes/user-auth/intent.md` with 15 sections: Raw Request, Problem, Desired Outcome, Users/Actors, Current Context, Proposed Direction, Scope, Non-Goals, Constraints, Success Criteria, Risks, Ambiguities (Blocking + Non-Blocking), Assumptions, Spec Seeds, Intent Approval.
 
-**Intent Gate:** `loomkit spec <name>` will:
+**Intent Gate:** `orca spec <name>` will:
 - **Warn** (default) if intent.md doesn't exist yet
 - **Hard block** if config has `intent.enforce: true`
 
-### loomkit spec <name>
+### orca spec <name>
 
 Creates a new change:
 
 ```bash
-loomkit spec user-auth
+orca spec user-auth
 ```
 
 Produces:
 ```
-loomkit/changes/user-auth/
+orca/changes/user-auth/
 ├── proposal.md              # proposal template
 └── specs/
     └── auth/
         └── spec.md          # spec template
 ```
 
-### loomkit design <name>
+### orca design <name>
 
 Adds a design to an existing change:
 
 ```bash
-loomkit design user-auth
+orca design user-auth
 ```
 
-Creates `loomkit/changes/user-auth/design.md`
+Creates `orca/changes/user-auth/design.md`
 
-### loomkit plan <name>
+### orca plan <name>
 
 Adds an implementation plan:
 
 ```bash
-loomkit plan user-auth
+orca plan user-auth
 ```
 
-Creates `loomkit/changes/user-auth/tasks.md`
+Creates `orca/changes/user-auth/tasks.md`
 
-### loomkit show [name]
+### orca show [name]
 
 View change details:
 
 ```bash
-loomkit show                    # list all changes with I/P/D/T/V flags
-loomkit show user-auth          # view details of one change
+orca show                    # list all changes with I/P/D/T/V flags
+orca show user-auth          # view details of one change
 ```
 
-### loomkit verify [name]
+### orca verify [name]
 
 Runs the coverage gate — checks whether every SHALL/MUST scenario has a test:
 
 ```bash
-loomkit verify                    # verify all changes
-loomkit verify user-auth          # verify one change
+orca verify                    # verify all changes
+orca verify user-auth          # verify one change
 ```
 
-Output: `.loomkit-verify.json` in the change directory.
+Output: `.orca-verify.json` in the change directory.
 
-### loomkit archive <name>
+### orca archive <name>
 
 Archives a verified change:
 
 ```bash
-loomkit archive user-auth
-loomkit archive user-auth --force --reason="minor doc update"
+orca archive user-auth
+orca archive user-auth --force --reason="minor doc update"
 ```
 
 Gate: verify must pass. Pre-merge validation checks the merged spec before writing. If validation fails, the archive is blocked.
 
-### loomkit status
+### orca status
 
 View the status of all changes + coverage:
 
 ```bash
-loomkit status
+orca status
 ```
 
-### loomkit adapt <tool>
+### orca adapt <tool>
 
 View adapter instructions:
 
 ```bash
-loomkit adapt claude-code
-loomkit adapt codex
+orca adapt claude-code
+orca adapt codex
 ```
 
-### loomkit self-check <name>
+### orca self-check <name>
 
 Scaffolds `self-check.md` — declare claims, evidence, known limitations, and unresolved assumptions before the code gate runs:
 
 ```bash
-loomkit self-check user-auth
+orca self-check user-auth
 ```
 
-### loomkit gate-code <name>
+### orca gate-code <name>
 
 Runs the SEAL gate on the current diff — deterministic + optional LLM review, produces a trust score and a PASS/REVISE/BLOCK-style verdict:
 
 ```bash
-loomkit gate-code user-auth [--skip-state-check] [--llm [provider]]
+orca gate-code user-auth [--skip-state-check] [--llm [provider]]
 ```
 
-### loomkit craft <name>
+### orca craft <name>
 
 Shows the craft review verdict (maintainability) for a change — if none exists yet, prints the prompt to generate one:
 
 ```bash
-loomkit craft user-auth
+orca craft user-auth
 ```
 
-### loomkit gate-pipeline
+### orca gate-pipeline
 
 Aggregates every change's gate verdicts into one SHIP/HOLD/ESCALATE pipeline decision:
 
 ```bash
-loomkit gate-pipeline
+orca gate-pipeline
 ```
 
-### loomkit learn <name>
+### orca learn <name>
 
 Extracts lessons from a change's gate history (what tripped the gate, how it was resolved):
 
 ```bash
-loomkit learn user-auth
+orca learn user-auth
 ```
 
-### loomkit plan-json <action> <name> [options]
+### orca plan-json <action> <name> [options]
 
 Weak-model task list, nested inside `phase.json`'s apply phase — the mechanical alternative to hand-writing `tasks.md` for models that need small, hash-chained, individually gated tasks:
 
 ```bash
-loomkit plan-json init user-auth --trace INTENT-ID --resolved-by <name>
-loomkit plan-json add user-auth --id TASK-1 --behavior "..." --acceptance "..." --files a.ts,b.ts --test tests/a.test.ts [--consumes ...]
-loomkit plan-json start user-auth TASK-1 [--skip-state-check]
-loomkit plan-json complete user-auth TASK-1 --test-cmd "npx vitest run tests/a.test.ts" [--debug-session ... --debug-cycle ... --root-cause ...] [--escalated]
-loomkit plan-json finish user-auth   # closes the "apply" phase once every task is complete
-loomkit plan-json show user-auth     # no options
+orca plan-json init user-auth --trace INTENT-ID --resolved-by <name>
+orca plan-json add user-auth --id TASK-1 --behavior "..." --acceptance "..." --files a.ts,b.ts --test tests/a.test.ts [--consumes ...]
+orca plan-json start user-auth TASK-1 [--skip-state-check]
+orca plan-json complete user-auth TASK-1 --test-cmd "npx vitest run tests/a.test.ts" [--debug-session ... --debug-cycle ... --root-cause ...] [--escalated]
+orca plan-json finish user-auth   # closes the "apply" phase once every task is complete
+orca plan-json show user-auth     # no options
 ```
 
-### loomkit publish [--dry-run]
+### orca publish [--dry-run]
 
 Publishes the current package version to npm — `--dry-run` packs and reports size without actually publishing:
 
 ```bash
-loomkit publish --dry-run
-loomkit publish
+orca publish --dry-run
+orca publish
 ```
 
 ---
@@ -390,7 +390,7 @@ THEN <expected outcome>
 
 **Goal:** Coverage gate.
 
-**Output:** `.loomkit-verify.json`
+**Output:** `.orca-verify.json`
 
 ### Phase 7: Archive
 
@@ -402,7 +402,7 @@ THEN <expected outcome>
 
 ## Skills Reference
 
-LoomKit ships 18 skills — each one corresponds to a phase or a cross-cutting concern:
+Orca ships 18 skills — each one corresponds to a phase or a cross-cutting concern:
 
 | Phase | Skill Directory | Trigger |
 |-------|----------------|---------|
@@ -419,7 +419,7 @@ LoomKit ships 18 skills — each one corresponds to a phase or a cross-cutting c
 | Verification | `skills/verification-before-completion/SKILL.md` | Evidence before assertions |
 | Finishing Branch | `skills/finishing-branch/SKILL.md` | Merge/PR/cleanup |
 | Parallel Agents | `skills/parallel-agents/SKILL.md` | Dispatch independent tasks |
-| Writing Skills | `skills/writing-skills/SKILL.md` | Create new LoomKit skills |
+| Writing Skills | `skills/writing-skills/SKILL.md` | Create new Orca skills |
 | Systematic Debugging | `skills/systematic-debugging/SKILL.md` | Any bug/test failure/unexpected behavior — find root cause before proposing a fix |
 | Requesting Code Review | `skills/requesting-code-review/SKILL.md` | Completing tasks or major features — dispatches a reviewer subagent |
 | Receiving Code Review | `skills/receiving-code-review/SKILL.md` | Before implementing review feedback — requires verification, not just agreement |
@@ -443,7 +443,7 @@ Humans don't write code (that's the agent's job). Humans:
 | Spec | `spec.md` | Are requirements sufficient? Any missing edge case? |
 | Design | `design.md` | Is the architecture reasonable? |
 | Plan | `tasks.md` | Are tasks feasible? Anything missed? |
-| Verify | `.loomkit-verify.json` | Is coverage sufficient? Do tests pass? |
+| Verify | `.orca-verify.json` | Is coverage sufficient? Do tests pass? |
 
 ---
 
@@ -452,7 +452,7 @@ Humans don't write code (that's the agent's job). Humans:
 ### Install
 
 ```bash
-cd ~/repo/loomkit
+cd ~/repo/orca
 bash adapters/claude-code/generate-skills.sh
 ```
 
@@ -474,7 +474,7 @@ bash adapters/claude-code/generate-skills.sh
 ## Adapter: Codex
 
 ```bash
-cd ~/repo/loomkit
+cd ~/repo/orca
 bash adapters/codex/generate-instructions.sh
 ```
 
@@ -486,7 +486,7 @@ See `adapters/codex/AGENTS.md` for details.
 
 ```
 my-project/
-├── loomkit/
+├── orca/
 │   ├── config.yaml
 │   ├── changes/
 │   │   └── user-auth/
@@ -496,7 +496,7 @@ my-project/
 │   │       ├── design.md
 │   │       ├── tasks.md
 │   │       ├── .traceability.yaml
-│   │       └── .loomkit-verify.json
+│   │       └── .orca-verify.json
 │   ├── specs/                         # Living specs
 │   │   └── auth/spec.md
 │   ├── archive/                       # Completed changes
@@ -509,7 +509,7 @@ my-project/
 
 ## Config
 
-`loomkit/config.yaml`:
+`orca/config.yaml`:
 
 ```yaml
 schema: spec-driven
@@ -549,19 +549,19 @@ rules:
 
 ## FAQ & Troubleshooting
 
-### "loomkit: command not found"?
+### "orca: command not found"?
 
 ```bash
 export PATH="$(pnpm bin):$PATH"
 # or use npx
-npx loomkit <command>
+npx orca <command>
 ```
 
 ### Intent Gate blocking spec?
 
 Add intent.md first:
 ```bash
-loomkit intent <name>
+orca intent <name>
 # Or disable the gate:
 # config: intent.enforce: false
 ```
@@ -577,7 +577,7 @@ Fix the spec to match the expected format (needs a Purpose section, scenarios ne
 ### Want to cancel a change?
 
 ```bash
-rm -rf loomkit/changes/<name>
+rm -rf orca/changes/<name>
 ```
 
 ---

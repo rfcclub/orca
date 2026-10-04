@@ -6,6 +6,7 @@ import { formatSpec } from '../../spec/format.js';
 import { validateSpec } from '../../spec/validator.js';
 import { extractLessons, formatLessonsMarkdown, generatePolicyDiff } from '../../harness/learn-loop.js';
 import type { GateHistoryEntry } from '../../harness/learn-loop.js';
+import { verifyFilePath } from '../../legacy.js';
 
 export function cmdArchive(name: string, options: { force?: boolean; reason?: string }): void {
   if (!changeExists(name)) {
@@ -16,9 +17,9 @@ export function cmdArchive(name: string, options: { force?: boolean; reason?: st
   const changeDir = getChangeDir(name);
 
   // Check verify result
-  const verifyPath = join(changeDir, '.loomkit-verify.json');
+  const verifyPath = verifyFilePath(changeDir);
   if (!existsSync(verifyPath) && !options.force) {
-    console.error(`✗  No verify result for "${name}". Run "loomkit verify ${name}" first, or use --force.`);
+    console.error(`✗  No verify result for "${name}". Run "orca verify ${name}" first, or use --force.`);
     process.exit(1);
   }
 

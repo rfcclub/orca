@@ -21,5 +21,5 @@ export function cmdSelfCheck(name: string): void {
   writeFileSync(selfCheckPath, createSelfCheckTemplate(), 'utf-8')
   console.log(`✓  Created ${selfCheckPath}`)
   console.log('  Fill in claims, evidence (JSON), known limitations, and unresolved assumptions.')
-  console.log('  Then run: loomkit gate-code ' + name)
+  console.log('  Then run: orca gate-code ' + name)
 }

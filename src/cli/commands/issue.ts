@@ -9,7 +9,7 @@ import { initRepo } from '../../issue/init.js';
 import { defaultGhExec, GhCliPort } from '../../issue/gh-cli.js';
 import type { GitHubPort } from '../../issue/github.js';
 import { loadConfig } from '../../config/loader.js';
-import { getChangesDir, getLoomKitDir } from '../utils.js';
+import { getChangesDir, getWorkspaceDir } from '../utils.js';
 
 export interface IssueDeps {
   port?: GitHubPort;
@@ -21,9 +21,9 @@ export interface IssueDeps {
 }
 
 const USAGE = [
-  'Usage: loomkit issue <classify|draft|open> <number> [--repo owner/name] [--name <change>] [--post]',
-  '       loomkit issue create --from-change <name> --shape <bug|enhancement> [--title <t>] [--dry-run] [--repo owner/name]',
-  '       loomkit issue init --reviewer <login> [--reviewer <login>] [--agent <login>] [--force] [--repo owner/name]',
+  'Usage: orca issue <classify|draft|open> <number> [--repo owner/name] [--name <change>] [--post]',
+  '       orca issue create --from-change <name> --shape <bug|enhancement> [--title <t>] [--dry-run] [--repo owner/name]',
+  '       orca issue init --reviewer <login> [--reviewer <login>] [--agent <login>] [--force] [--repo owner/name]',
 ].join('\n');
 
 function flag(args: string[], name: string): string | undefined {
@@ -90,7 +90,7 @@ export async function cmdIssue(args: string[], deps: IssueDeps = {}): Promise<vo
 }
 
 function configFromDisk(): DraftConfig {
-  const path = join(getLoomKitDir(), 'config.yaml');
+  const path = join(getWorkspaceDir(), 'config.yaml');
   const cfg = loadConfig(existsSync(path) ? readFileSync(path, 'utf-8') : null);
   return { provider: cfg.drafting?.provider };
 }

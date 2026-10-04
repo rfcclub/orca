@@ -45,7 +45,7 @@ describe('Verify', () => {
   });
 
   it('discovers OpenSpec multi-capability spec files', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'loomkit-verify-'));
+    const dir = mkdtempSync(join(tmpdir(), 'orca-verify-'));
     try {
       mkdirSync(join(dir, 'specs', 'mesh-bus'), { recursive: true });
       mkdirSync(join(dir, 'specs', 'mesh-notify'), { recursive: true });
@@ -62,7 +62,7 @@ describe('Verify', () => {
   });
 
   it('verifies OpenSpec multi-capability changes instead of skipping them', () => {
-    const root = mkdtempSync(join(tmpdir(), 'loomkit-project-'));
+    const root = mkdtempSync(join(tmpdir(), 'orca-project-'));
     const originalCwd = process.cwd();
 
     try {
@@ -107,7 +107,7 @@ The system MUST treat sockets as wake signals.
       process.chdir(root);
       cmdVerify('colony-mesh');
 
-      const result = JSON.parse(readFileSync(join(changeDir, '.loomkit-verify.json'), 'utf-8'));
+      const result = JSON.parse(readFileSync(join(changeDir, '.orca-verify.json'), 'utf-8'));
       expect(result.total_scenarios).toBe(2);
       expect(result.passing).toBe(2);
       expect(result.coverage).toBe(1);
@@ -163,7 +163,7 @@ describe('Archive Gate', () => {
 
   it('merges OpenSpec multi-capability changes into matching living specs', async () => {
     const { mergeSpecIntoLiving } = await import('../src/cli/commands/archive.js');
-    const root = mkdtempSync(join(tmpdir(), 'loomkit-archive-'));
+    const root = mkdtempSync(join(tmpdir(), 'orca-archive-'));
 
     try {
       const changeDir = join(root, 'changes', 'colony-mesh');

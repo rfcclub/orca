@@ -60,7 +60,7 @@ You must separate the user's desired outcome from the user's proposed solution.
 
 ## Deliverable
 
-Produce `loomkit/changes/<name>/intent.md` with all sections filled. Blank sections are acceptable if genuinely not applicable — mark as `<!-- None -->`. Empty sections with no marker mean "not yet explored" and block approval.
+Produce `orca/changes/<name>/intent.md` with all sections filled. Blank sections are acceptable if genuinely not applicable — mark as `<!-- None -->`. Empty sections with no marker mean "not yet explored" and block approval.
 
 The intent.md header must include:
 ```

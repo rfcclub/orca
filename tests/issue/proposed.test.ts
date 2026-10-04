@@ -40,7 +40,7 @@ function makeChange(intentMd: string | null): string {
 function runVerify(changeDir: string) {
   process.chdir(root);
   cmdVerify('demo');
-  return JSON.parse(readFileSync(join(changeDir, '.loomkit-verify.json'), 'utf-8'));
+  return JSON.parse(readFileSync(join(changeDir, '.orca-verify.json'), 'utf-8'));
 }
 
 beforeEach(() => {

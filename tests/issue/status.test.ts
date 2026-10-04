@@ -144,7 +144,7 @@ describe('orca status against a project', () => {
   it('keeps the existing status output for every change', async () => {
     change({ 'intent.md': '# Intent: demo\n' });
     await cmdStatus({ portFor: () => new FakeGitHub() });
-    expect(out()).toContain('LoomKit Status');
+    expect(out()).toContain('Orca Status');
     expect(out()).toContain('Active changes: 1');
   });
 });

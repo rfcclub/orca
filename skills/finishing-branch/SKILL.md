@@ -12,7 +12,7 @@ Implementation is done and verified. Now decide how to integrate: merge, PR, kee
 ## When to Use
 
 - After all tasks in tasks.md are `[x]`
-- After `loomkit verify` passes
+- After `orca verify` passes
 - Before archiving the change
 - When the human asks "what now?" after implementation
 
@@ -20,7 +20,7 @@ Implementation is done and verified. Now decide how to integrate: merge, PR, kee
 
 1. **Confirm completion.** Before presenting options:
    - All tasks marked `[x]`
-   - `loomkit verify <name>` passed
+   - `orca verify <name>` passed
    - No uncommitted changes (or only intentional ones)
    - Build is clean
 
@@ -43,22 +43,22 @@ Implementation is done and verified. Now decide how to integrate: merge, PR, kee
 
    **Option D: Discard**
    - The change was exploratory or superseded
-   - Archive the loomkit change to `archive/` but don't merge code
+   - Archive the orca change to `archive/` but don't merge code
    - Close without merging
 
 3. **Execute the chosen option.** For merge/PR:
    - Ensure branch is rebased on latest main
    - Run final verification
    - Merge or create PR
-   - Archive the loomkit change: `loomkit archive <name>`
+   - Archive the orca change: `orca archive <name>`
 
 4. **Clean up.** After merge:
    - Delete the feature branch (local + remote)
-   - Verify the loomkit change is in `archive/`
+   - Verify the orca change is in `archive/`
    - Update any related issues or tracking
 
 ## Rules
 
 - Never merge without verification passing
-- Never discard a branch with unarchived loomkit changes
+- Never discard a branch with unarchived orca changes
 - Present options, don't choose without asking (unless the human has given standing instructions)

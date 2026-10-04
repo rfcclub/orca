@@ -6,6 +6,7 @@ import { calculateCoverage } from '../../tdd/traceability.js';
 import { parse as parseYaml } from 'yaml';
 import { TransitionGuard } from '../../harness/transition-guard.js';
 import { findUnacceptedProposed } from '../../issue/proposed.js';
+import { VERIFY_FILE } from '../../legacy.js';
 
 export function cmdVerify(name?: string, opts: { skip?: boolean } = {}): void {
   const changes = name ? [name] : listChanges();
@@ -98,7 +99,7 @@ function verifyChange(name: string, skip = false): void {
     ...(unaccepted.length > 0 ? { unaccepted } : {}),
   };
 
-  const verifyPath = join(changeDir, '.loomkit-verify.json');
+  const verifyPath = join(changeDir, VERIFY_FILE);
   writeFileSync(verifyPath, JSON.stringify(verifyResult, null, 2), 'utf-8');
 
   const icon = passed ? '✓' : '✗';

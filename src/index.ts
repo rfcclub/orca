@@ -4,7 +4,7 @@ export type { SpecTree, Requirement, Scenario, Assertion, DeltaSpec, ValidationR
 export { validatePlan } from './plan/validator.js';
 
 export { loadConfig } from './config/loader.js';
-export type { LoomKitConfig } from './config/loader.js';
+export type { OrcaConfig } from './config/loader.js';
 
 export { TraceabilityMap, calculateCoverage } from './tdd/traceability.js';
 export type { ScenarioMapping, CoverageResult } from './tdd/traceability.js';
@@ -22,7 +22,7 @@ export { loadSchema } from './schema/loader.js';
 export type { WorkflowSchema, ArtifactDef } from './schema/loader.js';
 
 // Harness — plan.json (weak-model task list) read access for external consumers
-// (e.g. pilotfish), so they read the same file loomkit itself writes rather than
+// (e.g. pilotfish), so they read the same file orca itself writes rather than
 // re-parsing plan.json independently.
 export { readPlanJson, findProducerTask } from './harness/plan-json.js';
 export type {

@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { findChangeSpecFiles } from '../cli/utils.js';
+import { verifyFilePath } from '../legacy.js';
 
 export type OrcaPhase = 'intent' | 'spec' | 'design' | 'plan' | 'tdd' | 'verified';
 
@@ -17,7 +18,7 @@ function readJson(path: string): any | null {
  * unreadable plan/gate files are treated as absent so status never throws.
  */
 export function localPhase(changeDir: string): OrcaPhase {
-  const gate = readJson(join(changeDir, '.loomkit-verify.json'));
+  const gate = readJson(verifyFilePath(changeDir));
   if (gate?.passed === true) return 'verified';
 
   const plan = readJson(join(changeDir, 'plan.json'));

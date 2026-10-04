@@ -31,7 +31,7 @@ const DEFAULT_DESIGN = `## Architecture
 
 export function cmdDesign(name: string): void {
   if (!changeExists(name)) {
-    console.error(`✗  Change "${name}" not found. Run "loomkit spec ${name}" first.`);
+    console.error(`✗  Change "${name}" not found. Run "orca spec ${name}" first.`);
     process.exit(1);
   }
 
@@ -46,5 +46,5 @@ export function cmdDesign(name: string): void {
   writeFileSync(designPath, DEFAULT_DESIGN, 'utf-8');
   console.log(`✓  Created design.md for "${name}"`);
   console.log(`  ${designPath}`);
-  console.log('\n💡  Next: loomkit plan ' + name);
+  console.log('\n💡  Next: orca plan ' + name);
 }

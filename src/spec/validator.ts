@@ -37,7 +37,7 @@ export function validateSpec(markdown: string): ValidationResult {
 
   // Check schema version
   if (spec.schemaVersion > 1) {
-    warnings.push(`spec uses schema v${spec.schemaVersion}, LoomKit supports up to v1`);
+    warnings.push(`spec uses schema v${spec.schemaVersion}, Orca supports up to v1`);
   }
 
   return {

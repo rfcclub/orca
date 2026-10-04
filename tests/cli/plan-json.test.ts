@@ -8,20 +8,20 @@ import { fileURLToPath } from 'url'
 // Real, automated version of the manual verification the 2026-08-01 handoff
 // (an earlier handoff note) flagged as a known gap: "plan-json/
 // debug-loop CLI has no automated test for the whole CLI (only tested by hand through a
-// scratch project)." Spawns BOTH real CLIs — loomkit's and
+// scratch project)." Spawns BOTH real CLIs — orca's and
 // hammerhead-debug's — against tonight's rewritten hammerhead-debug
 // (DAP-via-debug-skill + the new standalone CLI), not the old hand-rolled
 // dap-client the handoff was written against.
 
-const loomkitCli = fileURLToPath(new URL('../../dist/cli/index.js', import.meta.url))
+const orcaCli = fileURLToPath(new URL('../../dist/cli/index.js', import.meta.url))
 const hammerheadCli = fileURLToPath(new URL('../../node_modules/.bin/hammerhead-debug', import.meta.url))
 
 let cwd: string
-const changeDir = 'loomkit/changes/test-change'
+const changeDir = 'orca/changes/test-change'
 
-function loomkit(args: string[]): { stdout: string; status: number } {
+function orca(args: string[]): { stdout: string; status: number } {
   try {
-    const stdout = execFileSync('node', [loomkitCli, ...args], { cwd, encoding: 'utf-8' })
+    const stdout = execFileSync('node', [orcaCli, ...args], { cwd, encoding: 'utf-8' })
     return { stdout, status: 0 }
   } catch (e) {
     const err = e as { stdout?: string; status?: number }
@@ -40,7 +40,7 @@ function hammerhead(args: string[]): { stdout: string; status: number } {
 }
 
 beforeEach(() => {
-  cwd = join(tmpdir(), `loomkit-hammerhead-e2e-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+  cwd = join(tmpdir(), `orca-hammerhead-e2e-${Date.now()}-${Math.random().toString(36).slice(2)}`)
   mkdirSync(cwd, { recursive: true })
   execFileSync('git', ['init', '-q'], { cwd })
   execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd })
@@ -49,28 +49,28 @@ beforeEach(() => {
   execFileSync('git', ['add', '.'], { cwd })
   execFileSync('git', ['commit', '-q', '-m', 'init'], { cwd })
 
-  loomkit(['intent', 'test-change'])
+  orca(['intent', 'test-change'])
   writeFileSync(
     join(cwd, changeDir, 'intent.md'),
     '# Intent: test-change\n\n## Intent Approval\n\nStatus: APPROVED\n\nApproved by: test\nDate: 2026-08-04\n',
   )
-  loomkit(['plan-json', 'init', 'test-change', '--trace', 'intent.md', '--resolved-by', 'test'])
+  orca(['plan-json', 'init', 'test-change', '--trace', 'intent.md', '--resolved-by', 'test'])
   mkdirSync(join(cwd, 'tests'), { recursive: true })
   writeFileSync(join(cwd, 'tests/a.test.js'), 'console.log("test ran");\nprocess.exit(0);\n')
-  loomkit([
+  orca([
     'plan-json', 'add', 'test-change',
     '--id', 'TASK-1', '--behavior', 'app prints hi', '--acceptance', 'console shows hi',
     '--files', 'app.js', '--test', 'tests/a.test.js',
   ])
-  loomkit(['plan-json', 'start', 'test-change', 'TASK-1', '--skip-state-check'])
+  orca(['plan-json', 'start', 'test-change', 'TASK-1', '--skip-state-check'])
 })
 
 afterEach(() => {
   rmSync(cwd, { recursive: true, force: true })
 })
 
-describe('loomkit plan-json ↔ hammerhead-debug — real end-to-end wiring', () => {
-  it('a CONFIRMED debug session, pointed at the loomkit changeDir, lets the task complete', () => {
+describe('orca plan-json ↔ hammerhead-debug — real end-to-end wiring', () => {
+  it('a CONFIRMED debug session, pointed at the orca changeDir, lets the task complete', () => {
     const opened = hammerhead(['open', '--symptom', 'app doesn\'t print hi', '--repro', 'true'])
     expect(opened.status).toBe(0)
     const { session_id: sessionId } = JSON.parse(opened.stdout) as { session_id: string }
@@ -84,7 +84,7 @@ describe('loomkit plan-json ↔ hammerhead-debug — real end-to-end wiring', ()
     expect(verdict.status).toBe(0)
     expect(hammerhead(['fix', sessionId, '--diff-sha256', 'realfixsha256']).status).toBe(0)
 
-    const complete = loomkit([
+    const complete = orca([
       'plan-json', 'complete', 'test-change', 'TASK-1',
       '--test-cmd', 'node tests/a.test.js',
       '--debug-session', sessionId, '--debug-cycle', 'c-1', '--root-cause', 'false alarm, output correct',
@@ -94,7 +94,7 @@ describe('loomkit plan-json ↔ hammerhead-debug — real end-to-end wiring', ()
   })
 
   it('a debug-session that does not exist is rejected, not silently accepted', () => {
-    const complete = loomkit([
+    const complete = orca([
       'plan-json', 'complete', 'test-change', 'TASK-1',
       '--test-cmd', 'node tests/a.test.js',
       '--debug-session', 'dbg-does-not-exist', '--debug-cycle', 'c-1', '--root-cause', 'x',
@@ -105,7 +105,7 @@ describe('loomkit plan-json ↔ hammerhead-debug — real end-to-end wiring', ()
   it('a real session but a nonexistent cycle id is rejected', () => {
     const opened = hammerhead(['open', '--symptom', 'x', '--repro', 'true'])
     const { session_id: sessionId } = JSON.parse(opened.stdout) as { session_id: string }
-    const complete = loomkit([
+    const complete = orca([
       'plan-json', 'complete', 'test-change', 'TASK-1',
       '--test-cmd', 'node tests/a.test.js',
       '--debug-session', sessionId, '--debug-cycle', 'c-999', '--root-cause', 'x',
@@ -113,14 +113,14 @@ describe('loomkit plan-json ↔ hammerhead-debug — real end-to-end wiring', ()
     expect(complete.status).toBe(1)
   })
 
-  it('a REFUTED cycle does not authorize completion — loomkit rejects it', () => {
+  it('a REFUTED cycle does not authorize completion — orca rejects it', () => {
     const opened = hammerhead(['open', '--symptom', 'x', '--repro', 'true'])
     const { session_id: sessionId } = JSON.parse(opened.stdout) as { session_id: string }
     hammerhead(['hypothesis', sessionId, 'wrong guess', '--predict', 'should see X'])
     hammerhead(['probe', sessionId, '--kind', 'instrumentation', '--observation', 'actual: Y, not X'])
     hammerhead(['verdict', sessionId, '--result', 'REFUTED', '--reason', 'prediction did not hold'])
 
-    const complete = loomkit([
+    const complete = orca([
       'plan-json', 'complete', 'test-change', 'TASK-1',
       '--test-cmd', 'node tests/a.test.js',
       '--debug-session', sessionId, '--debug-cycle', 'c-1', '--root-cause', 'x',
@@ -128,7 +128,7 @@ describe('loomkit plan-json ↔ hammerhead-debug — real end-to-end wiring', ()
     expect(complete.status).toBe(1)
   })
 
-  it('fix without a prior CONFIRMED verdict is rejected by hammerhead-debug itself, before loomkit is even involved', () => {
+  it('fix without a prior CONFIRMED verdict is rejected by hammerhead-debug itself, before orca is even involved', () => {
     const opened = hammerhead(['open', '--symptom', 'x', '--repro', 'true'])
     const { session_id: sessionId } = JSON.parse(opened.stdout) as { session_id: string }
     const fix = hammerhead(['fix', sessionId, '--diff-sha256', 'abc'])
