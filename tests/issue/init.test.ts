@@ -57,7 +57,14 @@ describe('initRepo', () => {
     expect(gh.labelsEnsured).toEqual([]);
   });
 
-  it('the embedded workflow template equals this repo\'s workflow file', () => {
-    expect(WORKFLOW_TEMPLATE).toBe(readFileSync(join(__dirname, '..', '..', '.github', 'workflows', 'orca-issue.yml'), 'utf-8'));
+  it('the embedded workflow template builds orca into .orca-tool, not the target repo root', () => {
+    expect(WORKFLOW_TEMPLATE).toContain('repository: GotakoVN/orca');
+    expect(WORKFLOW_TEMPLATE).toContain('path: .orca-tool');
+    expect(WORKFLOW_TEMPLATE).toContain('--ignore-scripts');
+    expect(WORKFLOW_TEMPLATE.match(/persist-credentials: false/g)).toHaveLength(2);
+    expect(WORKFLOW_TEMPLATE).toContain('node .orca-tool/dist/cli/index.js gha run');
+    for (const step of WORKFLOW_TEMPLATE.split('- run: ').slice(1)) {
+      if (/^pnpm (install|build)/.test(step)) expect(step).toContain('working-directory: .orca-tool');
+    }
   });
 });

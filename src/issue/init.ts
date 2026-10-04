@@ -32,13 +32,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      # The target repo is not an orca checkout (it may not even use pnpm), so fetch and
+      # build orca into its own directory. Needs a repo secret ORCA_REPO_TOKEN with read
+      # access to GotakoVN/orca; once orca is on npm this becomes a plain package install.
+      - uses: actions/checkout@v4
+        with:
+          repository: GotakoVN/orca
+          ref: master # pin to a reviewed commit SHA in your repo
+          token: \${{ secrets.ORCA_REPO_TOKEN }}
+          path: .orca-tool
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: corepack enable pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+        working-directory: .orca-tool
       - run: pnpm build
-      - run: node dist/cli/index.js gha run
+        working-directory: .orca-tool
+      - run: node .orca-tool/dist/cli/index.js gha run
         env:
           GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
 `;
