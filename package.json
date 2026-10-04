@@ -5,7 +5,6 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "loomkit": "dist/cli/index.js",
     "orca": "dist/cli/index.js"
   },
   "files": [
