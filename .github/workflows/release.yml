@@ -64,25 +64,29 @@ jobs:
       # version — the old workflow tried `npm publish` unconditionally on
       # every push to master and failed every single run as a result
       # (10/10 failed before this fix, confirmed via `gh run list`).
-      - name: Publish to npm
-        if: steps.check.outputs.exists == 'false'
-        run: npm publish --tag ${{ steps.vars.outputs.npm_tag }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Tag and create GitHub Release
-        if: steps.check.outputs.exists == 'false'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git tag "v${{ steps.vars.outputs.version }}"
-          git push origin "v${{ steps.vars.outputs.version }}"
-          gh release create "v${{ steps.vars.outputs.version }}" \
-            --repo "${{ github.repository }}" \
-            --title "v${{ steps.vars.outputs.version }}" \
-            --notes "npm: \`npm install @gotako/orca@${{ steps.vars.outputs.version }}\` (dist-tag: \`${{ steps.vars.outputs.npm_tag }}\`)
-
-          Dependencies:
-          - \`@gotako/hammerhead-debug@${{ steps.vars.outputs.hammerhead_version }}\`
-          - \`seal-gate@${{ steps.vars.outputs.sealgate_version }}\`" \
-            $([ "${{ steps.vars.outputs.prerelease }}" = "true" ] && echo --prerelease)
+      # RELEASE DISABLED (owner, 2026-10-04: "do not release to npm yet, comment that step out").
+      # Publishing and the tag/GitHub Release below are commented out together because the release
+      # notes announce an npm install that would not exist. Restore both to release.
+      # - name: Publish to npm
+      #   if: steps.check.outputs.exists == 'false'
+      #   run: npm publish --tag ${{ steps.vars.outputs.npm_tag }}
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      #
+      # - name: Tag and create GitHub Release
+      #   if: steps.check.outputs.exists == 'false'
+      #   env:
+      #     GH_TOKEN: ${{ github.token }}
+      #   run: |
+      #     git tag "v${{ steps.vars.outputs.version }}"
+      #     git push origin "v${{ steps.vars.outputs.version }}"
+      #     gh release create "v${{ steps.vars.outputs.version }}" \
+      #       --repo "${{ github.repository }}" \
+      #       --title "v${{ steps.vars.outputs.version }}" \
+      #       --notes "npm: \`npm install @gotako/orca@${{ steps.vars.outputs.version }}\` (dist-tag: \`${{ steps.vars.outputs.npm_tag }}\`)
+      #
+      #     Dependencies:
+      #     - \`@gotako/hammerhead-debug@${{ steps.vars.outputs.hammerhead_version }}\`
+      #     - \`seal-gate@${{ steps.vars.outputs.sealgate_version }}\`" \
+      #       $([ "${{ steps.vars.outputs.prerelease }}" = "true" ] && echo --prerelease)
+      #
