@@ -6,6 +6,8 @@ export interface PipelineVerdictEntry {
   verdict: GateVerdict
   change?: string
   trust_score?: number
+  /** Plan-gate state. `required` is true for changes made after gate-plan existed. */
+  plan?: { verdict?: GateVerdict; required: boolean }
 }
 
 export interface PipelineResult {
@@ -13,6 +15,7 @@ export interface PipelineResult {
   blocking?: string[]
   aggregate_trust_score?: number
   summary: string
+  warnings?: string[]
 }
 
 export function runPipelineGate(verdicts: PipelineVerdictEntry[]): PipelineResult {
@@ -38,6 +41,21 @@ export function runPipelineGate(verdicts: PipelineVerdictEntry[]): PipelineResul
     }
   }
 
+  const planBlocked = verdicts.filter(
+    v => v.plan?.verdict === 'BLOCK' || v.plan?.verdict === 'REVISE' || v.plan?.verdict === 'ESCALATE_TO_HUMAN',
+  )
+  const planMissing = verdicts.filter(v => v.plan && !v.plan.verdict && v.plan.required)
+  if (planBlocked.length > 0 || planMissing.length > 0) {
+    return {
+      decision: 'HOLD',
+      blocking: [...planBlocked, ...planMissing].map(v => v.change ?? 'unknown'),
+      summary: `HOLD: ${planBlocked.length} change(s) have a failing plan verdict, ${planMissing.length} have no plan verdict`,
+    }
+  }
+  const warnings = verdicts
+    .filter(v => v.plan && !v.plan.verdict && !v.plan.required)
+    .map(v => `${v.change ?? 'unknown'}: no plan verdict (created before gate-plan existed)`)
+
   const revises = verdicts.filter(v => v.verdict === 'REVISE')
   if (revises.length >= 3) {
     return {
@@ -61,5 +79,6 @@ export function runPipelineGate(verdicts: PipelineVerdictEntry[]): PipelineResul
     decision: 'SHIP',
     aggregate_trust_score: aggregate,
     summary: `SHIP: all ${verdicts.length} change(s) passed — aggregate trust score ${aggregate ?? 'N/A'}`,
+    ...(warnings.length > 0 ? { warnings } : {}),
   }
 }

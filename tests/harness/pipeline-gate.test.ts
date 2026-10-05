@@ -76,3 +76,41 @@ describe('runPipelineGate', () => {
     expect(result.decision).toBe('HOLD')
   })
 })
+
+describe('runPipelineGate plan verdicts (gate-plan SC-018..SC-021)', () => {
+  const code = (change: string, plan?: PipelineVerdictEntry['plan']): PipelineVerdictEntry =>
+    ({ verdict: 'PASS', change, trust_score: 90, plan })
+
+  for (const verdict of ['BLOCK', 'REVISE', 'ESCALATE_TO_HUMAN'] as const) {
+    it(`SC-018: plan verdict ${verdict} holds the pipeline and names the change`, () => {
+      const result = runPipelineGate([code('a', { verdict, required: true })])
+      expect(result.decision).not.toBe('SHIP')
+      expect(result.blocking).toContain('a')
+    })
+  }
+
+  it('SC-019: a change that requires a plan gate and has no plan verdict holds', () => {
+    const result = runPipelineGate([code('new', { required: true })])
+    expect(result.decision).toBe('HOLD')
+    expect(result.blocking).toContain('new')
+  })
+
+  it('SC-020: an older change without a plan verdict only warns', () => {
+    const result = runPipelineGate([code('old', { required: false })])
+    expect(result.decision).toBe('SHIP')
+    expect(result.warnings?.join('\n')).toContain('old')
+  })
+
+  it('SC-021: plan PASS and PASS_WITH_WARNINGS ship alongside passing code verdicts', () => {
+    const result = runPipelineGate([
+      code('a', { verdict: 'PASS', required: true }),
+      code('b', { verdict: 'PASS_WITH_WARNINGS', required: true }),
+    ])
+    expect(result.decision).toBe('SHIP')
+    expect(result.warnings ?? []).toEqual([])
+  })
+
+  it('entries without plan info behave exactly as before', () => {
+    expect(runPipelineGate([code('a')]).decision).toBe('SHIP')
+  })
+})

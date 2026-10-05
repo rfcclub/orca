@@ -13,6 +13,7 @@ import { cmdPublish } from './commands/publish.js';
 import { cmdShow } from './commands/show.js';
 import { cmdSelfCheck } from './commands/self-check.js';
 import { cmdGateCode } from './commands/gate-code.js';
+import { cmdGatePlan } from './commands/gate-plan.js';
 import { cmdCraft } from './commands/craft.js';
 import { cmdGatePipeline } from './commands/gate-pipeline.js';
 import { cmdLearn } from './commands/learn.js';
@@ -81,6 +82,14 @@ switch (command) {
       await cmdGateCode(args[0], { skip: process.argv.includes('--skip-state-check'), llm })
     }
     break;
+  case 'gate-plan':
+    if (!args[0]) { console.error('Usage: orca gate-plan <name> [--llm [provider]]'); process.exit(1); }
+    {
+      const llmIdx = args.indexOf('--llm')
+      const llm = llmIdx >= 0 ? (args[llmIdx + 1] && !args[llmIdx + 1].startsWith('-') ? args[llmIdx + 1] : '') : undefined
+      await cmdGatePlan(args[0], { llm })
+    }
+    break;
   case 'craft':
     if (!args[0]) { console.error('Usage: orca craft <name>'); process.exit(1); }
     cmdCraft(args[0]);
@@ -137,6 +146,7 @@ Workflow commands:
 
 Harness commands:
   self-check <name>       Scaffold self-check.md (claims, evidence, limitations)
+  gate-plan <name>        Run SEAL plan review with criteria locked from the approved intent [--llm [provider]]
   gate-code <name>        Run SEAL gate on current diff [--skip-state-check] [--llm [provider]]
   craft <name>            Show craft review verdict (maintainability)
   gate-pipeline           Aggregate all change verdicts → SHIP/HOLD/ESCALATE
