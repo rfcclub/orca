@@ -28,9 +28,11 @@ Orca is a set of gates that catch these before they ship:
   doesn't ship.
 - **TDD Iron Law** — no production code without a failing test first,
   enforced by the workflow, not a reminder in a doc.
-- **`orca verify`** — mechanically checks every SHALL/MUST scenario
-  has a passing test and writes `.orca-verify.json`, instead of
-  trusting the agent's word.
+- **`orca verify`** — calculates SHALL/MUST scenario coverage from
+  `.traceability.yaml` status and writes `.orca-verify.json`. It currently
+  does not execute tests or check that mapped test files exist. Retain actual
+  runner results separately; executable verification is tracked in
+  [#14](https://github.com/GotakoVN/orca/issues/14).
 - **Everything is markdown + JSON, git-tracked** — a human reviews the
   actual spec/plan/verify report and approves via a normal git merge,
   not a chat summary.
@@ -47,6 +49,11 @@ Orca is a set of gates that catch these before they ship:
 > **[HARNESS.md](./HARNESS.md)**.
 
 ## Quick Start
+
+The normal workflow uses local files and needs no GitHub account, `gh` command
+or network connection. GitHub issue integration is optional. Outcome workflows
+also support [local signed review](./docs/outcome-workflows.md#local-review);
+ordinary coding work needs no reviewer-key setup.
 
 ```bash
 # Install
@@ -87,6 +94,8 @@ intent → brainstorm → spec → design → plan → tdd → verify → archiv
 | `orca adapt <tool>` | Show adapter setup |
 | `orca self-check <name>` | Scaffold self-check.md (claims, evidence, limitations) |
 | `orca gate-code <name>` | Run SEAL gate on current diff |
+| `orca check-outcomes <name>` | Check optional outcome evidence; add `--local-review` or `--online` for review |
+| `orca review-outcome <name>` | Sign an eligible local stage with a configured reviewer key |
 | `orca craft <name>` | Show craft review verdict (maintainability) |
 | `orca gate-pipeline` | Aggregate all change verdicts → SHIP/HOLD/ESCALATE |
 | `orca learn <name>` | Extract lessons from gate history |
