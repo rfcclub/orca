@@ -28,9 +28,11 @@ Orca is a set of gates that catch these before they ship:
   doesn't ship.
 - **TDD Iron Law** — no production code without a failing test first,
   enforced by the workflow, not a reminder in a doc.
-- **`orca verify`** — mechanically checks every SHALL/MUST scenario
-  has a passing test and writes `.orca-verify.json`, instead of
-  trusting the agent's word.
+- **`orca verify`** — calculates SHALL/MUST scenario coverage from
+  `.traceability.yaml` status and writes `.orca-verify.json`. It currently
+  does not execute tests or check that mapped test files exist. Retain actual
+  runner results separately; executable verification is tracked in
+  [#14](https://github.com/GotakoVN/orca/issues/14).
 - **Everything is markdown + JSON, git-tracked** — a human reviews the
   actual spec/plan/verify report and approves via a normal git merge,
   not a chat summary.

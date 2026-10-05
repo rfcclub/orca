@@ -25,8 +25,8 @@ export interface GatePlanResult {
 
 /** True only when intent.md carries the `## Intent Approval` record with `Status: APPROVED`. */
 export function hasApprovalRecord(intentText: string): boolean {
-  const section = /^##\s+Intent Approval\s*$([\s\S]*?)(?=^##\s|(?![\s\S]))/m.exec(intentText)
-  return section !== null && /^Status:\s*APPROVED\s*$/m.test(section[1])
+  const section = [...intentText.matchAll(/^##\s+Intent Approval\s*$([\s\S]*?)(?=^##\s|(?![\s\S]))/gm)].at(-1)
+  return section !== undefined && /^Status:\s*APPROVED\s*$/m.test(section[1])
 }
 
 /** Locked criteria = the bullets under `## Success Criteria`, one per bullet, in order. */

@@ -21,6 +21,7 @@ import { cmdPlanJson } from './commands/plan-json.js';
 import { cmdIssue } from './commands/issue.js';
 import { cmdPr } from './commands/pr.js';
 import { cmdGha } from './commands/gha.js';
+import { cmdCheckOutcomes } from './commands/check-outcomes.js';
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
@@ -48,6 +49,10 @@ switch (command) {
     break;
   case 'verify':
     cmdVerify(args[0] || undefined, { skip: process.argv.includes('--skip-state-check') });
+    break;
+  case 'check-outcomes':
+    if (!args[0]) { console.error('Usage: orca check-outcomes <name> [--online]'); process.exit(1); }
+    await cmdCheckOutcomes(args[0], { online: args.includes('--online') });
     break;
   case 'archive':
     if (!args[0]) { console.error('Usage: orca archive <name> [--force --reason="..."]'); process.exit(1); }
@@ -142,6 +147,7 @@ Workflow commands:
   plan <name>             Add tasks.md to existing change
   show [name]             Show change details (all changes if no name)
   verify [name]           Run coverage gate (all changes if no name)
+  check-outcomes <name>   Check scoped outcome evidence [--online for authenticated human review]
   archive <name>          Archive verified change
 
 Harness commands:

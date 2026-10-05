@@ -48,3 +48,5 @@ export { localPhase } from './issue/phase.js';
 export type { OrcaPhase } from './issue/phase.js';
 export type { GitHubPort } from './issue/github.js';
 export type { Actors, Issue, Comment } from './issue/types.js';
+export { checkOutcomes, readOutcomeContract, contractDigest } from './harness/outcomes.js';
+export type { OutcomeContract, OutcomeReport, OutcomeAssessment, OutcomeState, OutcomeReview } from './harness/outcomes.js';

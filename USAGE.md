@@ -2,6 +2,13 @@
 
 Intent-guided spec-driven design framework with TDD superpowers. Built for AI agents and humans working together.
 
+For investigation, decision and migration outcomes, see
+[Outcome workflows](./docs/outcome-workflows.md). Use
+`orca check-outcomes <change> [--online]` to check scoped receipts and authenticate
+human review. Findings, decision acceptance, tested code and live migration have
+separate completion boundaries. The current legacy verify command is a YAML
+coverage calculation; retain actual test execution evidence separately.
+
 > Current as of v1.6.1. For the harness/debug-pipeline side (install
 > across all four packages, seal-gate/pilotfish/hammerhead-debug
 > integration, full walkthrough), see [HARNESS.md](./HARNESS.md).

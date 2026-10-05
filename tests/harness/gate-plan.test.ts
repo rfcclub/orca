@@ -55,6 +55,11 @@ function write(rel: string, text: string) {
 }
 
 describe('hasApprovalRecord', () => {
+  it('uses the final approval record appended by issue open, including revocation', () => {
+    const issueBody = '## Intent Approval\nStatus: DRAFT\n';
+    expect(hasApprovalRecord(issueBody + '\n' + APPROVED_INTENT)).toBe(true);
+    expect(hasApprovalRecord(APPROVED_INTENT + '\n## Intent Approval\nStatus: DRAFT\n')).toBe(false);
+  });
   it('is true only with an Intent Approval section whose status is APPROVED', () => {
     expect(hasApprovalRecord(APPROVED_INTENT)).toBe(true)
     expect(hasApprovalRecord('# Intent\n\nStatus: DRAFT\n')).toBe(false)
