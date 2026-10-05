@@ -4,7 +4,7 @@ Intent-guided spec-driven design framework with TDD superpowers. Built for AI ag
 
 For investigation, decision and migration outcomes, see
 [Outcome workflows](./docs/outcome-workflows.md). Use
-`orca check-outcomes <change> [--online]` to check scoped receipts and authenticate
+`orca check-outcomes <change> [--local-review | --online]` to check scoped receipts and authenticate
 human review. Findings, decision acceptance, tested code and live migration have
 separate completion boundaries. The current legacy verify command is a YAML
 coverage calculation; retain actual test execution evidence separately.

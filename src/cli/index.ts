@@ -22,6 +22,7 @@ import { cmdIssue } from './commands/issue.js';
 import { cmdPr } from './commands/pr.js';
 import { cmdGha } from './commands/gha.js';
 import { cmdCheckOutcomes } from './commands/check-outcomes.js';
+import { cmdReviewOutcome } from './commands/review-outcome.js';
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
@@ -51,8 +52,12 @@ switch (command) {
     cmdVerify(args[0] || undefined, { skip: process.argv.includes('--skip-state-check') });
     break;
   case 'check-outcomes':
-    if (!args[0]) { console.error('Usage: orca check-outcomes <name> [--online]'); process.exit(1); }
-    await cmdCheckOutcomes(args[0], { online: args.includes('--online') });
+    if (!args[0]) { console.error('Usage: orca check-outcomes <name> [--online | --local-review]'); process.exit(1); }
+    await cmdCheckOutcomes(args[0], { online: args.includes('--online'), localReview: args.includes('--local-review') });
+    break;
+  case 'review-outcome':
+    if (!args[0]) { console.error('Usage: orca review-outcome <name> --stage <id> --digest <sha256> --reviewer <id> --key <path>'); process.exit(1); }
+    await cmdReviewOutcome(args[0], args.slice(1));
     break;
   case 'archive':
     if (!args[0]) { console.error('Usage: orca archive <name> [--force --reason="..."]'); process.exit(1); }
@@ -147,7 +152,8 @@ Workflow commands:
   plan <name>             Add tasks.md to existing change
   show [name]             Show change details (all changes if no name)
   verify [name]           Run coverage gate (all changes if no name)
-  check-outcomes <name>   Check scoped outcome evidence [--online for authenticated human review]
+  check-outcomes <name>   Check outcome evidence [--local-review | --online]
+  review-outcome <name>   Sign local review (--stage, --digest, --reviewer, --key)
   archive <name>          Archive verified change
 
 Harness commands:
@@ -167,7 +173,7 @@ Harness commands:
                           finish:   closes phase.json's "apply" phase once all tasks are complete
                           show:     (no options)
 
-Issue commands (GitHub issue as the intent of record):
+Optional GitHub issue commands (local intent.md works without GitHub):
   issue classify <n>      Check an issue's sections against its bug/enhancement shape
   issue draft <n> [--post]  Draft missing sections as tagged lines (needs drafting.provider)
   issue open <n> --name <change>

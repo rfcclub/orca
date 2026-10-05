@@ -7,7 +7,8 @@ import type { GitHubPort } from '../../issue/github.js';
 import { parseIssueRef } from '../../issue/status.js';
 import { checkOutcomes, type OutcomeReview } from '../../harness/outcomes.js';
 import { extractLockedCriteria } from '../../harness/gate-plan.js';
-import { getChangeDir } from '../utils.js';
+import { getChangeDir, getProjectRoot } from '../utils.js';
+import { localOutcomeReview } from '../../harness/local-review.js';
 
 /** Read-only authentication. Local roles, bot reports and agent attestations are not authority. */
 export async function authenticatedOutcomeReview(port: GitHubPort, issue: number, workspace: string, intent?: string): Promise<OutcomeReview> {
@@ -34,8 +35,9 @@ export async function authenticatedOutcomeReview(port: GitHubPort, issue: number
   return async (stage, digest) => accepted.has(`${stage}:${digest}`);
 }
 
-export async function cmdCheckOutcomes(name: string, opts: { online?: boolean } = {}): Promise<void> {
+export async function cmdCheckOutcomes(name: string, opts: { online?: boolean; localReview?: boolean } = {}): Promise<void> {
   if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) throw new Error('Invalid change name');
+  if (opts.online && opts.localReview) throw new Error('Choose either --online or --local-review; review adapters are mutually exclusive');
   const dir = getChangeDir(name);
   if (!existsSync(dir)) throw new Error(`Change "${name}" not found`);
   let review: OutcomeReview | undefined;
@@ -44,6 +46,8 @@ export async function cmdCheckOutcomes(name: string, opts: { online?: boolean } 
     const ref = parseIssueRef(intent);
     if (!ref) throw new Error('Online outcome review requires the canonical Issue: owner/repo#N reference');
     review = await authenticatedOutcomeReview(new GhCliPort(ref.repo), ref.number, basename(dirname(dirname(dir))), intent);
+  } else if (opts.localReview) {
+    review = localOutcomeReview(dir, getProjectRoot());
   }
   const report = await checkOutcomes(dir, { review });
   if (report.mode === 'legacy') {
@@ -51,7 +55,8 @@ export async function cmdCheckOutcomes(name: string, opts: { online?: boolean } 
     return;
   }
   mkdirSync(join(dir, '.harness'), { recursive: true });
-  writeFileSync(join(dir, '.harness/outcome-report.json'), JSON.stringify(report, null, 2) + '\n');
-  console.log(JSON.stringify(report, null, 2));
+  const output = { ...report, review_source: opts.online ? 'github' : opts.localReview ? 'local-signature' : 'none' };
+  writeFileSync(join(dir, '.harness/outcome-report.json'), JSON.stringify(output, null, 2) + '\n');
+  console.log(JSON.stringify(output, null, 2));
   if (!report.complete) process.exitCode = 1;
 }

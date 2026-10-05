@@ -1,11 +1,16 @@
 # Outcome workflows
 
 For findings, decisions or migrations, put one `orca-outcomes` YAML fence in the
-existing tasks.md. The issue remains the intent of record; decision.md carries
-the narrative; `.harness/` holds captured receipts. Do not duplicate these per stage.
+existing tasks.md. Local intent.md is sufficient; GitHub issues are optional.
+When GitHub integration is selected, the approved issue is the intent of record.
+decision.md carries the narrative; `.harness/` holds captured receipts. Do not
+duplicate these per stage.
 
 `orca check-outcomes <change>` checks integrity offline and reports missing
-evidence. `--online` reads the canonical issue and default-branch human reviewers.
+evidence. `--local-review` verifies signatures from configured local reviewers;
+`--online` reads the canonical issue and default-branch human reviewers.
+Choose one adapter explicitly; they cannot be combined and never fall back to
+each other. Local mode never invokes `gh` or makes network requests.
 Output is `.harness/outcome-report.json`. Incomplete, review-required and
 unsupported stages exit nonzero. Legacy changes without a fence retain their path.
 
@@ -31,15 +36,95 @@ to the change folder. Hashes, nonempty bytes, realpath containment and exact sco
 are checked. Stages with matching scopes can reference the same receipt.
 The report identifies environment/revision/boundary; reviewers check freshness.
 
-A configured human reviewer accepts a stage by posting the entire comment
+With GitHub integration, a configured human reviewer accepts a stage by posting the entire comment
 `/accept-outcome <stage-id> <contract-digest>` on the canonical issue. The checker
 prints the digest. Any changed stage, scope, obligation or evidence reference
 invalidates old review. Agent comments, bot reports, local role files and YAML
 flags cannot accept an outcome. Online mode only reads; it never posts approval.
-Offline checking cannot establish acceptance, even from an old cached report.
+The default check without a review adapter cannot establish acceptance, even
+from an old cached report or an existing local signature.
 
 Hashes prove bytes, not causal relevance or truth. Human review supplies semantic
 acceptance. Seal retains plan/code review; this adds no new Seal detector.
+
+## Local review
+
+The normal local intent → spec → design → plan → TDD → verify → archive workflow
+requires no GitHub account or signing keys. Only opt-in outcome stages that need
+review use the setup below.
+
+An operator provisions Ed25519 keys and pins the public key in
+`~/.config/orca/reviewers.json` (or the absolute path in `ORCA_REVIEWERS_FILE`).
+Configuration and private keys must resolve outside the project, including
+through symlinks. A project cannot supply its own authority. The configuration
+uses this shape:
+
+```json
+{
+  "version": 1,
+  "reviewers": [
+    {"id": "owner", "kind": "human", "publicKey": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----\n"}
+  ]
+}
+```
+
+For a fresh setup, the operator can run this script in their own trusted shell.
+It refuses to overwrite existing files:
+
+```bash
+node --input-type=module <<'JS'
+import { generateKeyPairSync } from 'node:crypto';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+const directory = join(homedir(), '.config/orca');
+const privatePath = join(directory, 'owner-review.pem');
+const configPath = join(directory, 'reviewers.json');
+if (existsSync(privatePath) || existsSync(configPath)) {
+  throw new Error('Existing reviewer setup; inspect it instead of replacing it');
+}
+mkdirSync(directory, { recursive: true, mode: 0o700 });
+const keys = generateKeyPairSync('ed25519');
+writeFileSync(privatePath, keys.privateKey.export({type: 'pkcs8', format: 'pem'}), {flag: 'wx', mode: 0o600});
+writeFileSync(configPath, JSON.stringify({
+  version: 1,
+  reviewers: [{id: 'owner', kind: 'human', publicKey: keys.publicKey.export({type: 'spki', format: 'pem'})}]
+}, null, 2) + '\n', {flag: 'wx', mode: 0o600});
+JS
+```
+
+Review the intent, scope and actual evidence, then copy the exact digest from
+`orca check-outcomes <change>`:
+
+```bash
+orca review-outcome my-change --stage decision --digest <current-digest> \
+  --reviewer owner --key "$HOME/.config/orca/owner-review.pem"
+orca check-outcomes my-change --local-review
+```
+
+The signer refuses incomplete, unsupported, unknown or stale stages.
+`.harness/local-review.json` stores signatures bound to the stage and the whole
+contract digest. Edited contracts invalidate signatures; removed reviewers
+revoke their authority. Agent identities and forged signatures cannot accept.
+File URLs such as `file:///absolute/path/follow-up.md` can link deferred local
+work without an issue tracker.
+
+A signature proves possession of the pinned key, not that a human physically
+used it. Protect both the key and reviewer configuration from untrusted agents;
+outside-project containment alone does not isolate processes with access to
+the same account. Orca never generates or registers reviewer keys automatically.
+The default offline report remains non-accepting; local signatures are checked
+only with `--local-review`.
+
+### Rollback plan for local review adoption
+
+Keep the previous Orca package tarball and reviewer configuration before
+adoption. To recover, reinstall that tarball (`npm install -g <previous.tgz>`)
+and restore only the configuration entries changed for the rollout after
+comparing current edits. Existing intents and evidence stay in place; stop
+using `--local-review` while investigating. Remove a reviewer from the pinned
+configuration to revoke their signatures. Recheck the CLI version and rerun
+the ordinary local workflow before resuming.
 
 ## Investigation example: verifier audit
 
