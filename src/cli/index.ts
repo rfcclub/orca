@@ -18,6 +18,7 @@ import { cmdGatePipeline } from './commands/gate-pipeline.js';
 import { cmdLearn } from './commands/learn.js';
 import { cmdPlanJson } from './commands/plan-json.js';
 import { cmdIssue } from './commands/issue.js';
+import { cmdPr } from './commands/pr.js';
 import { cmdGha } from './commands/gha.js';
 
 const command = process.argv[2];
@@ -98,6 +99,9 @@ switch (command) {
   case 'issue':
     await cmdIssue(args);
     break;
+  case 'pr':
+    await cmdPr(args);
+    break;
   case 'gha':
     await cmdGha(args[0]);
     break;
@@ -157,6 +161,12 @@ Issue commands (GitHub issue as the intent of record):
   issue init --reviewer <login> [--agent <login>] [--force]
                           Set up a repo: orca labels, workflow, openspec/actors.yaml
   gha run                 GitHub Action entry point (reads the event payload; sets labels/comments)
+
+PR commands (GitHub App as the authoring identity):
+  pr create --repo owner/name --head branch --title <t> [--body <b>] [--base <branch>] [--issue <n>]
+                          Create a pull request as the github-app App installation
+  pr token [--repo owner/name]
+                          Print a short-lived installation token (for gh/GIT_AUTH)
 
 Other:
   publish [--dry-run]     Publish current version to npm
