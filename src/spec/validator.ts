@@ -27,11 +27,19 @@ export function validateSpec(markdown: string): ValidationResult {
   warnings.push(...spec.warnings);
 
   // Check each scenario has THEN
+  const ids = new Set<string>();
   for (const req of spec.requirements) {
+    for (const block of [...req.scenarios, ...(req.properties ?? [])]) {
+      if (ids.has(block.id)) errors.push(`duplicate scenario/property ID "${block.id}"`);
+      ids.add(block.id);
+    }
     for (const scenario of req.scenarios) {
       if (scenario.then.length === 0) {
         errors.push(`scenario "${scenario.id}" missing THEN clause`);
       }
+    }
+    for (const property of req.properties ?? []) {
+      errors.push(...property.errors.map(error => `property "${property.id}": ${error}`));
     }
   }
 

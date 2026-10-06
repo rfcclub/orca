@@ -23,6 +23,7 @@ import { cmdPr } from './commands/pr.js';
 import { cmdGha } from './commands/gha.js';
 import { cmdCheckOutcomes } from './commands/check-outcomes.js';
 import { cmdReviewOutcome } from './commands/review-outcome.js';
+import { cmdPropertyProbe } from './commands/property-probe.js';
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
@@ -58,6 +59,14 @@ switch (command) {
   case 'record-red':
     if (!args[0]) { console.error('Usage: orca record-red <name>'); process.exit(1); }
     cmdVerify(args[0], { expected: 'red' });
+    break;
+  case 'property-probe':
+    if (!args[0] || !argumentValue(args, '--property')) {
+      console.error('Usage: orca property-probe <name> --property <id> [--mutation <json>] [--equivalence <review.json>]');
+      process.exit(1);
+    }
+    cmdPropertyProbe(args[0], { property: argumentValue(args, '--property')!,
+      mutation: argumentValue(args, '--mutation'), equivalence: argumentValue(args, '--equivalence') });
     break;
   case 'check-outcomes':
     if (!args[0]) { console.error('Usage: orca check-outcomes <name> [--online | --local-review]'); process.exit(1); }
@@ -164,6 +173,8 @@ Workflow commands:
                           --base <commit> [--harness tests/helper.ts,vitest.config.ts]
                           Replay identical regression tests at base and current source
   record-red <name>       Record genuine assertion-failure RED with input bindings
+  property-probe <name>   Record isolated mutation outcome (--property, --mutation)
+                          --equivalence <review.json>: operator-signed equivalence review
   check-outcomes <name>   Check outcome evidence [--local-review | --online]
   review-outcome <name>   Sign local review (--stage, --digest, --reviewer, --key)
   archive <name>          Archive verified change

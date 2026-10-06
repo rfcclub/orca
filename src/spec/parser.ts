@@ -8,11 +8,23 @@ export interface Scenario {
   then: { text: string; assertion: ReturnType<typeof parseAssertion> }[];
 }
 
+export interface Property {
+  id: string;
+  title: string;
+  given: string[];
+  then: Scenario['then'];
+  runs: number | null;
+  maxDiscardRatio?: number;
+  coverage: Record<string, number>;
+  errors: string[];
+}
+
 export interface Requirement {
   title: string;
   strength: 'SHALL' | 'MUST' | 'SHOULD' | 'MAY';
   description: string;
   scenarios: Scenario[];
+  properties?: Property[];
 }
 
 export interface SpecTree {
@@ -56,8 +68,6 @@ export function parseSpec(markdown: string): SpecTree {
 
   // Extract requirements
   const requirements: Requirement[] = [];
-  const reqRegex = /^###\s+Requirement:\s+(.+)$/gm;
-  const scenarioRegex = /^####\s+Scenario:\s+(.+)$/gm;
 
   // Split by requirement headers
   const parts = markdown.split(/^###\s+Requirement:\s+/m).slice(1);
@@ -68,7 +78,7 @@ export function parseSpec(markdown: string): SpecTree {
     const body = part.split('\n').slice(1).join('\n');
 
     // Extract description (text before first scenario)
-    const descPart = body.split(/^####\s+Scenario:/m)[0].trim();
+    const descPart = body.split(/^####\s+(?:Scenario|Property):/m)[0].trim();
     const description = descPart;
 
     // Determine RFC 2119 strength
@@ -85,12 +95,16 @@ export function parseSpec(markdown: string): SpecTree {
 
     // Extract scenarios
     const scenarios: Scenario[] = [];
-    const scenarioParts = body.split(/^####\s+Scenario:\s+/m).slice(1);
-
-    let scenarioIndex = 0;
-    for (const scPart of scenarioParts) {
+    const properties: Property[] = [];
+    const blocks = body.split(/^####\s+(Scenario|Property):\s+/m);
+    for (let index = 1; index < blocks.length; index += 2) {
+      const scPart = blocks[index + 1];
       const scTitle = scPart.split('\n')[0].trim();
       const scBody = scPart.split('\n').slice(1).join('\n');
+      if (blocks[index] === 'Property') {
+        properties.push(parseProperty(reqTitle, scTitle, scBody));
+        continue;
+      }
 
       const given: string[] = [];
       const when: string[] = [];
@@ -126,11 +140,52 @@ export function parseSpec(markdown: string): SpecTree {
 
       const id = slugify(`${reqTitle} ${scTitle}`);
       scenarios.push({ id, title: scTitle, given, when, then });
-      scenarioIndex++;
     }
 
-    requirements.push({ title: reqTitle, strength, description, scenarios });
+    requirements.push({ title: reqTitle, strength, description, scenarios,
+      ...(properties.length ? { properties } : {}) });
   }
 
   return { schemaVersion, title, purpose, requirements, warnings };
+}
+
+function parseProperty(requirement: string, title: string, body: string): Property {
+  const property: Property = { id: slugify(`${requirement} ${title}`), title,
+    given: [], then: [], runs: null, coverage: {}, errors: [] };
+  let forAll = 0;
+  let runClauses = 0;
+  let discardClauses = 0;
+  for (const line of body.split('\n')) {
+    const text = line.trim();
+    if (!text) continue;
+    const match = /^-\s+(?:\*\*(FOR ALL|AND|THEN|RUNS|DISCARDS|COVERAGE)\*\*|(FOR ALL|AND|THEN|RUNS|DISCARDS|COVERAGE))\s+(.+)$/.exec(text);
+    if (!match) { property.errors.push(`unsupported clause: ${text}`); continue; }
+    const clause = match[1] ?? match[2];
+    const value = match[3].trim();
+    if (clause === 'FOR ALL') { forAll++; property.given.push(value); }
+    else if (clause === 'AND') {
+      if (!forAll) property.errors.push('AND before FOR ALL');
+      if (property.then.length) property.then.push({ text: value, assertion: parseAssertion(value) });
+      else property.given.push(value);
+    } else if (clause === 'THEN') property.then.push({ text: value, assertion: parseAssertion(value) });
+    else if (clause === 'RUNS') {
+      runClauses++;
+      if (!/^[1-9]\d*$/.test(value) || !Number.isSafeInteger(Number(value))) property.errors.push('RUNS must be a positive safe integer');
+      else property.runs = Number(value);
+    } else if (clause === 'DISCARDS') {
+      discardClauses++;
+      const ratio = /^<=\s*(\d+(?:\.\d+)?)%$/.exec(value);
+      if (!ratio || Number(ratio[1]) >= 100) property.errors.push('DISCARDS must be <= a percentage below 100%');
+      else property.maxDiscardRatio = Number(ratio[1]) / 100;
+    } else {
+      const coverage = /^(.+?)\s+>=\s*(\d+(?:\.\d+)?)%$/.exec(value);
+      if (!coverage || Number(coverage[2]) > 100 || coverage[1] in property.coverage) property.errors.push('invalid or duplicate COVERAGE category');
+      else property.coverage[coverage[1]] = Number(coverage[2]) / 100;
+    }
+  }
+  if (forAll !== 1) property.errors.push('requires exactly one FOR ALL clause');
+  if (!property.then.length) property.errors.push('missing THEN clause');
+  if (runClauses !== 1) property.errors.push('requires exactly one RUNS clause');
+  if (discardClauses > 1) property.errors.push('duplicate DISCARDS clause');
+  return property;
 }

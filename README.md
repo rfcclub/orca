@@ -24,7 +24,7 @@ Orca is a set of gates that catch these before they ship:
 - **Intent Gate** — separates the real problem from the proposed
   solution, captures non-goals and ambiguities, *before* a spec exists.
 - **Spec as WHEN/THEN scenarios** with SHALL/MUST/SHOULD keywords — a
-  requirement either has a scenario mapped to a real test, or it
+  requirement either has a Scenario or Property mapped to a real test, or it
   doesn't ship.
 - **TDD Iron Law** — no production code without a failing test first,
   enforced by the workflow, not a reminder in a doc.
@@ -111,7 +111,7 @@ intent → brainstorm → spec → design → plan → tdd → verify → archiv
 | Design | `skills/design/SKILL.md` | Technical design with test strategy |
 | Plan | `skills/plan/SKILL.md` | Bite-sized TDD tasks, exact code |
 | TDD | `skills/tdd/SKILL.md` | RED/GREEN/REFACTOR enforcement |
-| Verify | `skills/verify/SKILL.md` | Scenario coverage gate |
+| Verify | `skills/verify/SKILL.md` | Executed Scenario/Property evidence |
 | Archive | `skills/archive/SKILL.md` | Merge specs, archive change |
 | Executing Plans | `skills/executing-plans/SKILL.md` | Execute plan tasks sequentially |
 | Subagent-Driven | `skills/subagent-driven/SKILL.md` | Per-task subagent dispatch |

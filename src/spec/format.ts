@@ -39,6 +39,19 @@ export function formatSpec(spec: SpecTree): string {
       }
       parts.push('');
     }
+    for (const property of req.properties ?? []) {
+      parts.push(`#### Property: ${property.title}`, '');
+      for (let index = 0; index < property.given.length; index++) {
+        parts.push(`- **${index ? 'AND' : 'FOR ALL'}** ${property.given[index]}`);
+      }
+      for (const relation of property.then) parts.push(`- **THEN** ${relation.text}`);
+      if (property.runs !== null) parts.push(`- **RUNS** ${property.runs}`);
+      if (property.maxDiscardRatio !== undefined) parts.push(`- **DISCARDS** <= ${property.maxDiscardRatio * 100}%`);
+      for (const [category, ratio] of Object.entries(property.coverage)) {
+        parts.push(`- **COVERAGE** ${category} >= ${ratio * 100}%`);
+      }
+      parts.push('');
+    }
   }
 
   return parts.join('\n');

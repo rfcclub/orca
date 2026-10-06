@@ -1,0 +1,6 @@
+scenarios:
+  - scenario: no-lookahead-future-independence
+    test: no-lookahead.test.js
+    generators:
+      - generator.mjs
+    corpus: orca/corpus/no-lookahead-future-independence.json

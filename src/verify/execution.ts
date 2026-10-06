@@ -1,12 +1,13 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { z } from 'zod';
+import { propertyEvidence, type PropertyContract } from '../property/evidence.js';
 
-export interface TestSelection { id: string; test: string; assertion?: string }
+export interface TestSelection { id: string; test: string; assertion?: string; property?: PropertyContract }
 export interface SourceBinding { head: string; diff_sha256: string; tree_sha256: string }
 export interface ExecutionReceipt {
   version: 1;
@@ -18,6 +19,9 @@ export interface ExecutionReceipt {
   command: { executable: string; args: string[]; exit_code: number | null; stdout: string; stderr: string };
   report: string;
   report_sha256: string;
+  property_report?: string;
+  property_report_sha256?: string;
+  property_invocation?: string;
   assertions: { id: string; test: string; name: string; status: string; failures: string[] }[];
   reasons: string[];
   started_at: string;
@@ -107,6 +111,9 @@ export function validateExecutionReceipt(root: string, receipt: ExecutionReceipt
   try {
     if (receipt.version !== 1 || receipt.report_sha256 !== hashBytes(receipt.report) || receipt.reasons.length) return false;
     const evidence = reportEvidence(root, receipt.selection, receipt.report, receipt.command.exit_code);
+    if (receipt.selection.some(s => s.property) &&
+        (receipt.property_report_sha256 !== hashBytes(receipt.property_report ?? '') ||
+         propertyEvidence(root, receipt.selection, receipt.property_report ?? '', receipt.property_invocation, receipt.outcome).length)) return false;
     return evidence.outcome === receipt.outcome && evidence.outcome !== 'inconclusive' &&
       JSON.stringify(evidence.assertions) === JSON.stringify(receipt.assertions);
   } catch { return false; }
@@ -125,25 +132,32 @@ export function executeTests(root: string, selection: TestSelection[]): Executio
   const source = sourceBinding(root);
   const temp = mkdtempSync(join(tmpdir(), 'orca-vitest-'));
   const output = join(temp, 'report.json');
+  const propertyInvocation = randomUUID();
   const args = [entry, 'run', ...new Set(selection.map(s => s.test)), '--root', resolve(root),
     '--reporter=json', `--outputFile=${output}`, '--maxWorkers=1', '--no-file-parallelism',
     '--expect.requireAssertions'];
   const started_at = new Date().toISOString();
   try {
     const run = spawnSync(process.execPath, args, { cwd: root, encoding: 'utf8', timeout: 120000, maxBuffer: 16 * 1024 * 1024,
-      env: { ...process.env, CI: 'true' } });
+      env: { ...process.env, CI: 'true',
+        ORCA_PROPERTY_RUN_ID: selection.some(s => s.property) ? propertyInvocation : undefined,
+        ORCA_PROPERTY_RECEIPT_DIR: selection.some(s => s.property) ? temp : undefined } });
     const report = existsSync(output) ? readFileSync(output, 'utf8') : '';
     const reasons: string[] = [];
     if (run.error) reasons.push(`Runner failed: ${run.error.message}`);
     const evidence = reportEvidence(root, selection, report, run.status);
     const { assertions } = evidence;
     reasons.push(...evidence.reasons);
+    const propertyReport = JSON.stringify(readdirSync(temp).filter(p => p !== 'report.json' && p.endsWith('.json')).sort()
+      .map(p => JSON.parse(readFileSync(join(temp, p), 'utf8'))));
+    reasons.push(...propertyEvidence(root, selection, propertyReport, propertyInvocation, evidence.outcome));
     if (JSON.stringify(sourceBinding(root)) !== JSON.stringify(source) ||
         selection.some(s => hashBytes(readFileSync(selectedFile(root, s.test))) !== tests[s.test]) ||
         hashBytes(readFileSync(entry)) !== runner.sha256) reasons.push('Execution inputs changed while the runner was running');
     return { version: 1, outcome: reasons.length === 0 ? evidence.outcome : 'inconclusive',
       source, tests, runner, selection, command: { executable: process.execPath, args, exit_code: run.status,
         stdout: run.stdout ?? '', stderr: run.stderr ?? '' }, report, report_sha256: hashBytes(report),
+      property_report: propertyReport, property_report_sha256: hashBytes(propertyReport), property_invocation: propertyInvocation,
       assertions, reasons, started_at, finished_at: new Date().toISOString() };
   } finally {
     rmSync(temp, { recursive: true, force: true });

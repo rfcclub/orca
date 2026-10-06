@@ -54,6 +54,16 @@ function trustedReviewers(projectRoot: string, file: string): Map<string, KeyObj
   return humans;
 }
 
+/** Separate namespaces prevent an outcome signature being reused as equivalence. */
+export function verifyOperatorSignature(projectRoot: string, namespace: string, boundDigest: string,
+  reviewer: string, signature: string, reviewersFile = localReviewersPath()): boolean {
+  id.parse(reviewer); digest.parse(boundDigest);
+  const key = trustedReviewers(projectRoot, reviewersFile).get(reviewer);
+  const bytes = Buffer.from(signature, 'base64');
+  return !!key && bytes.toString('base64') === signature &&
+    verify(null, Buffer.from(JSON.stringify([namespace, boundDigest])), key, bytes);
+}
+
 function message(stage: string, boundDigest: string): Buffer {
   return Buffer.from(JSON.stringify(['orca-outcome-review/v1', stage, boundDigest]));
 }
