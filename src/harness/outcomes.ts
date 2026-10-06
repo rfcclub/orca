@@ -4,6 +4,8 @@ import { isAbsolute, join, relative, resolve } from 'path';
 import { parse } from 'yaml';
 import { z } from 'zod';
 import { extractLockedCriteria, hasApprovalRecord } from './gate-plan.js';
+import { checkChangeEvidence } from '../verify/change.js';
+import { basename } from 'path';
 
 const text = z.string().trim().min(1);
 const scopeSchema = z.object({ environment: text, revision: text, boundary: text }).strict();
@@ -44,7 +46,8 @@ const contractSchema = z.object({
 export type OutcomeContract = z.infer<typeof contractSchema>;
 type Stage = OutcomeContract['stages'][number];
 export type OutcomeState = 'incomplete' | 'review-required' | 'unsupported' |
-  'findings-reviewed' | 'findings-reviewed-inconclusive' | 'decision-accepted' | 'migration-completed';
+  'findings-reviewed' | 'findings-reviewed-inconclusive' | 'decision-accepted' |
+  'implementation-verified' | 'migration-completed';
 export interface OutcomeAssessment {
   id: string;
   outcome: Stage['outcome'];
@@ -131,7 +134,7 @@ function receiptErrors(changeDir: string, stage: Stage): string[] {
   return errors;
 }
 
-function assess(stage: Stage): { terminal: OutcomeState; reasons: string[]; followUps: string[] } {
+function assess(changeDir: string, stage: Stage): { terminal: OutcomeState; reasons: string[]; followUps: string[] } {
   const reasons: string[] = [];
   const followUps: string[] = [];
   const has = (kind: string) => stage.evidence.some(e => e.kind === kind);
@@ -177,8 +180,12 @@ function assess(stage: Stage): { terminal: OutcomeState; reasons: string[]; foll
       if (!has(kind)) reasons.push(`Migration requires ${kind} evidence at its declared live boundary`);
     }
   } else {
-    terminal = 'unsupported';
-    reasons.push('Executable code verification is unavailable: existing YAML status and reviewer opinion are not test execution');
+    terminal = 'implementation-verified';
+    const executable = stage.evidence.some(e => e.kind === 'tests' && e.path === '.orca-verify.json');
+    if (!executable) {
+      terminal = 'unsupported';
+      reasons.push('Implementation requires a fresh executable verify receipt; YAML status and reviewer opinion are insufficient');
+    }
   }
   return { terminal, reasons, followUps };
 }
@@ -193,13 +200,28 @@ export async function checkOutcomes(changeDir: string, opts: { review?: OutcomeR
   const digest = contractDigest(contract);
   const stages: OutcomeAssessment[] = [];
   for (const stage of contract.stages) {
-    const assessment = assess(stage);
+    const assessment = assess(changeDir, stage);
     const reasons = [...receiptErrors(changeDir, stage), ...assessment.reasons];
+    if (stage.outcome === 'implementation' && reasons.length === 0) {
+      const evidence = checkChangeEvidence(resolve(changeDir, '../../..'), changeDir, basename(changeDir));
+      reasons.push(...evidence.reasons);
+    }
     let state: OutcomeState = assessment.terminal === 'unsupported' ? 'unsupported' : 'incomplete';
     if (reasons.length === 0) {
       state = 'review-required';
       try {
-        if (opts.review && await opts.review(stage.id, digest)) state = assessment.terminal;
+        if (opts.review && await opts.review(stage.id, digest)) {
+          if (stage.outcome === 'implementation') {
+            const fresh = checkChangeEvidence(resolve(changeDir, '../../..'), changeDir, basename(changeDir), { execute: false });
+            const unchanged = contractDigest(readOutcomeContract(changeDir)) === digest &&
+              receiptErrors(changeDir, stage).length === 0;
+            if (fresh.valid && unchanged) state = assessment.terminal;
+            else {
+              state = 'incomplete';
+              reasons.push(...fresh.reasons, ...(!unchanged ? ['Outcome contract or evidence changed during review'] : []));
+            }
+          } else state = assessment.terminal;
+        }
         else reasons.push('Authenticated human review of this contract digest is required');
       } catch {
         reasons.push('Human review is unavailable; acceptance remains unknown');

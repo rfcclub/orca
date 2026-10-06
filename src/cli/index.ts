@@ -49,7 +49,15 @@ switch (command) {
     cmdPlan(args[0]);
     break;
   case 'verify':
-    cmdVerify(args[0] || undefined, { skip: process.argv.includes('--skip-state-check') });
+    cmdVerify(args[0]?.startsWith('--') ? undefined : args[0], {
+      skip: args.includes('--skip-state-check'), coverageOnly: args.includes('--coverage-only'),
+      base: argumentValue(args, '--base'),
+      harness: argumentValue(args, '--harness')?.split(',').map(s => s.trim()).filter(Boolean),
+    });
+    break;
+  case 'record-red':
+    if (!args[0]) { console.error('Usage: orca record-red <name>'); process.exit(1); }
+    cmdVerify(args[0], { expected: 'red' });
     break;
   case 'check-outcomes':
     if (!args[0]) { console.error('Usage: orca check-outcomes <name> [--online | --local-review]'); process.exit(1); }
@@ -151,7 +159,11 @@ Workflow commands:
   design <name>           Add design.md to existing change
   plan <name>             Add tasks.md to existing change
   show [name]             Show change details (all changes if no name)
-  verify [name]           Run coverage gate (all changes if no name)
+  verify [name]           Execute local Vitest for required assertion mappings
+                          --coverage-only: historical bookkeeping, never execution proof
+                          --base <commit> [--harness tests/helper.ts,vitest.config.ts]
+                          Replay identical regression tests at base and current source
+  record-red <name>       Record genuine assertion-failure RED with input bindings
   check-outcomes <name>   Check outcome evidence [--local-review | --online]
   review-outcome <name>   Sign local review (--stage, --digest, --reviewer, --key)
   archive <name>          Archive verified change
@@ -165,11 +177,11 @@ Harness commands:
   learn <name>            Extract lessons from gate history
   plan-json <action> <name> [options]
                           Weak-model task list, nested inside phase.json's apply phase
-                          (init|add|start|complete|finish|show)
+                          (init|add|start|red|complete|finish|show)
                           init:     --trace <INTENT-ID> --resolved-by <name>
-                          add:      --id --behavior --acceptance --files --test [--consumes]
-                          start:    <task-id> [--skip-state-check]
-                          complete: <task-id> --test-cmd "<cmd>" [--debug-session --debug-cycle --root-cause] [--escalated]
+                          add:      --id --behavior --acceptance --files --test [--assertion] [--consumes]
+                          start/red:<task-id> [--skip-state-check] (requires executed assertion RED)
+                          complete: <task-id> [--debug-session --debug-cycle --root-cause] [--escalated]
                           finish:   closes phase.json's "apply" phase once all tasks are complete
                           show:     (no options)
 
@@ -196,4 +208,12 @@ Other:
   adapt <tool>            Show adapter instructions (claude-code | codex)
   help                    Show this help
 `);
+}
+
+function argumentValue(args: string[], flag: string): string | undefined {
+  const index = args.indexOf(flag);
+  if (index < 0) return undefined;
+  const value = args[index + 1];
+  if (!value || value.startsWith('--')) throw new Error(`${flag} requires a value`);
+  return value;
 }

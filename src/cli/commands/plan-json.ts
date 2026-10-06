@@ -1,13 +1,13 @@
-import { existsSync } from 'fs';
-import { join, resolve } from 'path';
-import { execFileSync } from 'child_process';
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 import { readDebugLoopJson } from '@gotako/hammerhead-debug';
-import { getChangeDir, changeExists } from '../utils.js';
+import { getChangeDir, changeExists, getProjectRoot } from '../utils.js';
 import { createPlanJson, readPlanJson, writePlanJson, findProducerTask } from '../../harness/plan-json.js';
 import { PlanGuard } from '../../harness/plan-guard.js';
 import { TransitionGuard } from '../../harness/transition-guard.js';
 import { sha256File, recordPhaseComplete, readPhaseJson } from '../../harness/phase-json.js';
 import type { PlanTask, TaskArtifact, ArtifactRef } from '../../harness/types.js';
+import { executeTests, hashBytes, selectedFile, validateExecutionReceipt } from '../../verify/execution.js';
 
 function flag(args: string[], name: string): string | undefined {
   const idx = args.indexOf(`--${name}`);
@@ -37,7 +37,7 @@ function requireTask(taskId: string, tasks: PlanTask[]): PlanTask {
 
 export async function cmdPlanJson(action: string, name: string | undefined, args: string[]): Promise<void> {
   if (!name) {
-    console.error('Usage: orca plan-json <init|add|start|complete|finish|show> <name> [options]');
+    console.error('Usage: orca plan-json <init|add|start|red|complete|finish|show> <name> [options]');
     process.exit(1);
   }
 
@@ -49,6 +49,7 @@ export async function cmdPlanJson(action: string, name: string | undefined, args
       cmdAdd(name, args);
       break;
     case 'start':
+    case 'red':
       cmdStart(name, args[0], args.slice(1));
       break;
     case 'complete':
@@ -62,7 +63,7 @@ export async function cmdPlanJson(action: string, name: string | undefined, args
       break;
     default:
       console.error(`Unknown plan-json action: ${action}`);
-      console.error('Usage: orca plan-json <init|add|start|complete|finish|show> <name> [options]');
+      console.error('Usage: orca plan-json <init|add|start|red|complete|finish|show> <name> [options]');
       process.exit(1);
   }
 }
@@ -99,6 +100,7 @@ function cmdAdd(name: string, args: string[]): void {
   const acceptance = flag(args, 'acceptance');
   const filesArg = flag(args, 'files');
   const test = flag(args, 'test');
+  const assertion = flag(args, 'assertion');
   const consumesArg = flag(args, 'consumes');
 
   if (!id || !behavior || !acceptance || !filesArg || !test) {
@@ -131,6 +133,7 @@ function cmdAdd(name: string, args: string[]): void {
   }
 
   const task: PlanTask = { id, status: 'pending', behavior, acceptance, files, test, consumes, produces: [] };
+  if (assertion) task.assertion = assertion;
   plan.tasks.push(task);
   writePlanJson(changeDir, plan);
   console.log(`✓  Added task "${id}" to plan.json`);
@@ -163,6 +166,16 @@ function cmdStart(name: string, taskId: string | undefined, args: string[]): voi
     process.exit(1);
   }
 
+  if (task.status !== 'pending') {
+    console.error(`✗  ${task.id}: start requires a pending task`);
+    process.exit(1);
+  }
+  const red = executeTests(getProjectRoot(), [{ id: task.id, test: task.test, assertion: task.assertion }]);
+  if (red.outcome !== 'red') {
+    console.error(`✗  ${task.id}: genuine assertion RED required (${red.outcome}). ${red.reasons.join('; ')}`);
+    process.exit(1);
+  }
+  task.red = red;
   task.status = 'in_progress';
   writePlanJson(changeDir, plan);
   console.log(`✓  Task "${taskId}" started`);
@@ -175,27 +188,28 @@ function cmdStart(name: string, taskId: string | undefined, args: string[]): voi
 function cmdComplete(name: string, taskId: string | undefined, args: string[]): void {
   const changeDir = requireChangeDir(name);
   if (!taskId) {
-    console.error('Usage: orca plan-json complete <name> <task-id> --test-cmd "<command>" [--debug-session <id> --debug-cycle <id> --root-cause "..."] [--escalated]');
+    console.error('Usage: orca plan-json complete <name> <task-id> [--debug-session <id> --debug-cycle <id> --root-cause "..."] [--escalated]');
     process.exit(1);
   }
   const plan = readPlanJson(changeDir);
   const task = requireTask(taskId, plan.tasks);
 
-  const testCmd = flag(args, 'test-cmd');
-  if (!testCmd) {
-    console.error('Usage: orca plan-json complete <name> <task-id> --test-cmd "<command>" [--debug-session <id> --debug-cycle <id> --root-cause "..."] [--escalated]');
+  if (hasFlag(args, 'test-cmd')) {
+    console.error('✗  --test-cmd is unsupported: Orca executes task.test directly');
     process.exit(1);
   }
-
-  let gatePassed = true;
-  try {
-    execFileSync('sh', ['-c', testCmd], { stdio: 'pipe' });
-  } catch (e) {
-    gatePassed = false;
-    const output = e as { stdout?: Buffer; stderr?: Buffer };
-    console.error(output.stdout?.toString() ?? '');
-    console.error(output.stderr?.toString() ?? '');
+  const root = getProjectRoot();
+  if (task.status !== 'in_progress' || task.red?.outcome !== 'red' ||
+      !validateExecutionReceipt(root, task.red) ||
+      task.red.report_sha256 !== hashBytes(task.red.report) ||
+      task.red.tests[task.test] !== hashBytes(readFileSync(selectedFile(root, task.test))) ||
+      JSON.stringify(task.red.selection) !== JSON.stringify([{ id: task.id, test: task.test, ...(task.assertion ? { assertion: task.assertion } : {}) }])) {
+    console.error(`✗  ${task.id}: genuine RED with the unchanged task test is required`);
+    process.exit(1);
   }
+  const green = executeTests(root, [{ id: task.id, test: task.test, assertion: task.assertion }]);
+  const gatePassed = green.outcome === 'green' && green.runner.sha256 === task.red.runner.sha256 &&
+    green.runner.version === task.red.runner.version;
 
   const debugSession = flag(args, 'debug-session');
   if (debugSession) {
@@ -229,10 +243,11 @@ function cmdComplete(name: string, taskId: string | undefined, args: string[]): 
   }
 
   task.status = 'complete';
+  task.green = green;
   const producedPaths = [...new Set([...task.files, task.test])];
   task.produces = producedPaths.map(path => {
-    const filePath = resolve(process.cwd(), path);
-    return { path, sha256: existsSync(filePath) ? sha256File(filePath) : null };
+    const filePath = selectedFile(root, path);
+    return { path, sha256: sha256File(filePath) };
   });
   writePlanJson(changeDir, plan);
   console.log(`✓  Task "${taskId}" complete — gate green, ${task.produces.length} artifact(s) hashed`);

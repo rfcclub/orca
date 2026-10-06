@@ -1,6 +1,6 @@
 {
   "name": "@gotako/orca",
-  "version": "1.6.2-beta.2",
+  "version": "1.6.2-beta.3",
   "description": "Intent-guided spec-driven design framework with TDD superpowers — Intent → Spec → TDD → Trust",
   "type": "module",
   "main": "dist/index.js",
@@ -12,7 +12,10 @@
     "schemas",
     "adapters",
     "USAGE.md",
-    "docs/outcome-workflows.md"
+    "docs/outcome-workflows.md",
+    "docs/executable-evidence.md",
+    "skills/verify",
+    "skills/tdd"
   ],
   "scripts": {
     "build": "tsc",

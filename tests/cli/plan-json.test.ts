@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { execFileSync } from 'child_process'
-import { mkdirSync, rmSync, writeFileSync } from 'fs'
+import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { fileURLToPath } from 'url'
@@ -24,8 +24,8 @@ function orca(args: string[]): { stdout: string; status: number } {
     const stdout = execFileSync('node', [orcaCli, ...args], { cwd, encoding: 'utf-8' })
     return { stdout, status: 0 }
   } catch (e) {
-    const err = e as { stdout?: string; status?: number }
-    return { stdout: err.stdout ?? '', status: err.status ?? 1 }
+    const err = e as { stdout?: string; stderr?: string; status?: number }
+    return { stdout: (err.stdout ?? '') + (err.stderr ?? ''), status: err.status ?? 1 }
   }
 }
 
@@ -45,7 +45,9 @@ beforeEach(() => {
   execFileSync('git', ['init', '-q'], { cwd })
   execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd })
   execFileSync('git', ['config', 'user.name', 'test'], { cwd })
-  writeFileSync(join(cwd, 'app.js'), "console.log('hi')\n")
+  writeFileSync(join(cwd, 'package.json'), '{"type":"module"}\n')
+  writeFileSync(join(cwd, '.gitignore'), 'node_modules\n')
+  writeFileSync(join(cwd, 'app.js'), 'export const value = 1;\n')
   execFileSync('git', ['add', '.'], { cwd })
   execFileSync('git', ['commit', '-q', '-m', 'init'], { cwd })
 
@@ -56,13 +58,17 @@ beforeEach(() => {
   )
   orca(['plan-json', 'init', 'test-change', '--trace', 'intent.md', '--resolved-by', 'test'])
   mkdirSync(join(cwd, 'tests'), { recursive: true })
-  writeFileSync(join(cwd, 'tests/a.test.js'), 'console.log("test ran");\nprocess.exit(0);\n')
+  symlinkSync(fileURLToPath(new URL('../../node_modules', import.meta.url)), join(cwd, 'node_modules'), 'dir')
+  writeFileSync(join(cwd, 'tests/a.test.js'), `import {it,expect} from 'vitest';
+import {value} from '../app.js';
+it('[TASK-1]', () => expect(value).toBe(2));\n`)
   orca([
     'plan-json', 'add', 'test-change',
     '--id', 'TASK-1', '--behavior', 'app prints hi', '--acceptance', 'console shows hi',
     '--files', 'app.js', '--test', 'tests/a.test.js',
   ])
-  orca(['plan-json', 'start', 'test-change', 'TASK-1', '--skip-state-check'])
+  expect(orca(['plan-json', 'start', 'test-change', 'TASK-1', '--skip-state-check']).status).toBe(0)
+  writeFileSync(join(cwd, 'app.js'), 'export const value = 2;\n')
 })
 
 afterEach(() => {
@@ -86,7 +92,6 @@ describe('orca plan-json ↔ hammerhead-debug — real end-to-end wiring', () =>
 
     const complete = orca([
       'plan-json', 'complete', 'test-change', 'TASK-1',
-      '--test-cmd', 'node tests/a.test.js',
       '--debug-session', sessionId, '--debug-cycle', 'c-1', '--root-cause', 'false alarm, output correct',
     ])
     expect(complete.status).toBe(0)
@@ -96,10 +101,10 @@ describe('orca plan-json ↔ hammerhead-debug — real end-to-end wiring', () =>
   it('a debug-session that does not exist is rejected, not silently accepted', () => {
     const complete = orca([
       'plan-json', 'complete', 'test-change', 'TASK-1',
-      '--test-cmd', 'node tests/a.test.js',
       '--debug-session', 'dbg-does-not-exist', '--debug-cycle', 'c-1', '--root-cause', 'x',
     ])
     expect(complete.status).toBe(1)
+    expect(complete.stdout).toContain('debug_ref points to a session')
   })
 
   it('a real session but a nonexistent cycle id is rejected', () => {
@@ -107,10 +112,10 @@ describe('orca plan-json ↔ hammerhead-debug — real end-to-end wiring', () =>
     const { session_id: sessionId } = JSON.parse(opened.stdout) as { session_id: string }
     const complete = orca([
       'plan-json', 'complete', 'test-change', 'TASK-1',
-      '--test-cmd', 'node tests/a.test.js',
       '--debug-session', sessionId, '--debug-cycle', 'c-999', '--root-cause', 'x',
     ])
     expect(complete.status).toBe(1)
+    expect(complete.stdout).toContain('not a confirmed cycle')
   })
 
   it('a REFUTED cycle does not authorize completion — orca rejects it', () => {
@@ -122,10 +127,10 @@ describe('orca plan-json ↔ hammerhead-debug — real end-to-end wiring', () =>
 
     const complete = orca([
       'plan-json', 'complete', 'test-change', 'TASK-1',
-      '--test-cmd', 'node tests/a.test.js',
       '--debug-session', sessionId, '--debug-cycle', 'c-1', '--root-cause', 'x',
     ])
     expect(complete.status).toBe(1)
+    expect(complete.stdout).toContain('not a confirmed cycle')
   })
 
   it('fix without a prior CONFIRMED verdict is rejected by hammerhead-debug itself, before orca is even involved', () => {

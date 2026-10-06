@@ -18,37 +18,18 @@ Check that all SHALL/MUST scenarios have passing tests, run the test suite, and 
 
 ## Instructions
 
-1. **Check scenario coverage:**
-   - Read spec scenarios from `changes/<name>/specs/<capability>/spec.md`
-   - Read `.traceability.yaml` for test mappings
-   - Identify SHALL/MUST scenarios (mandatory for gate)
-   - Identify uncovered mandatory scenarios → FAIL
-2. **Run test suite:** `npx vitest run` (or configured framework)
-   - All tests pass? → proceed
-   - Any failures? → FAIL, report which test(s)
-3. **Generate coverage report:**
-   - Per scenario: status (pass/fail/untested)
-   - Overall coverage percentage
-   - Gate: pass/fail
-4. **Write `.orca-verify.json`** in `changes/<name>/`:
-   ```json
-   {
-     "change": "<name>",
-     "timestamp": "<ISO-8601>",
-     "coverage": {
-       "mandatory": 10,
-       "covered": 10,
-       "untested": 0,
-       "percent": 100
-     },
-     "tests": {
-       "total": 15,
-       "passed": 15,
-       "failed": 0
-     },
-     "gate": "pass"
-   }
-   ```
+1. Map every SHALL/MUST scenario to a local test file in `.traceability.yaml`.
+   Name the Vitest assertion with `[scenario-id]` or provide its exact full
+   name through `assertion`. A physical assertion cannot cover multiple IDs.
+2. Run the full project tests and build and retain their real reporter output.
+3. Run `orca verify <name>`. The CLI executes the mapped assertions itself and
+   writes `.orca-verify.json`; never write or alter that receipt by hand.
+4. For a bug regression, use `orca verify <name> --base <commit>`. Declare any
+   required test-only setup files with comma-separated `--harness` paths.
+   Setup/import failures are inconclusive, not RED.
+5. Inspect `execution_verified`, `execution`, `replay`, `inputs` and `reasons`.
+   `--coverage-only` is explicitly non-executable and cannot satisfy code
+   acceptance or ordinary archive. Re-run verify after changes to inputs.
 
 ## Output
 
@@ -58,7 +39,7 @@ Check that all SHALL/MUST scenarios have passing tests, run the test suite, and 
 
 - Is the JSON well-formed?
 - Are mandatory scenarios calculated correctly (SHALL/MUST only)?
-- Gate = pass only if all mandatory covered AND all tests pass
+- PASS requires every mandatory assertion to execute successfully
 - Timestamp is valid ISO-8601
 
 ## Anti-Patterns
@@ -67,3 +48,4 @@ Check that all SHALL/MUST scenarios have passing tests, run the test suite, and 
 - Reporting gate=pass when tests fail
 - Not reading the actual spec (hardcoded coverage numbers)
 - Skipping traceability check
+- Authoring a PASS receipt or treating YAML status as execution evidence
