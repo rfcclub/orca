@@ -36,7 +36,7 @@ async function fixture() {
 const t=p.call.task,n=t.id==='T1'?2:3;
 console.log(JSON.stringify({files:{[t.files[0]]:'export const value='+n+';'}}));`);
   const configPath = join(root, 'loop.config.json');
-  writeFileSync(configPath, JSON.stringify({ pilotfishModule: require.resolve('@gotako/pilotfish'),
+  writeFileSync(configPath, JSON.stringify({ pilotfishModule: process.env.ORCA_TEST_PILOTFISH_MODULE ?? require.resolve('@gotako/pilotfish'),
     roles: { apply: 'fixture' }, driver: { command: process.execPath, args: [driver, '{promptFile}', '{maxTokens}'], env: [] } }));
   const gate = await import(gateModule);
   expect((await gate.runGatePlan({ changeDir: dir })).verdict).toBe('PASS');
