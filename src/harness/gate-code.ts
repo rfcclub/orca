@@ -1,11 +1,13 @@
 import { createHash } from 'crypto'
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs'
-import { join, resolve } from 'path'
+import { basename, join, resolve } from 'path'
 import { parseSelfCheck } from './self-check.js'
 import { readPhaseJson, recordGateVerdict, sha256String } from './phase-json.js'
 import { readPlanJson } from './plan-json.js'
 import { TransitionGuard } from './transition-guard.js'
 import { reviewedCodeDiff } from './code-diff.js'
+import { parseSpec } from '../spec/parser.js'
+import { createPropertySealBridge } from './property-seal.js'
 import type { GateVerdict, VerdictEntry } from './types.js'
 import { executeTests, sourceBinding, validateExecutionReceipt } from '../verify/execution.js'
 
@@ -68,6 +70,13 @@ export async function runGateCode(opts: {
   // Load SEAL and TrustMemory
   const sealGate = await import('seal-gate')
   const { Seal } = sealGate
+  const mandatoryProperties = parseSpec(specContent ?? '').requirements.some(req =>
+    (req.strength === 'MUST' || req.strength === 'SHALL') && (req.properties?.length ?? 0) > 0)
+  if (mandatoryProperties && typeof (sealGate as Record<string, unknown>).evaluatePropertyEvidence !== 'function') {
+    throw new Error('Seal Property enforcement API unavailable; install the reviewed Seal candidate before gating mandatory Properties')
+  }
+  const propertyBridge = mandatoryProperties
+    ? createPropertySealBridge(opts.projectRoot ?? process.cwd(), opts.changeDir, basename(opts.changeDir)) : undefined
   const TrustMemory = (sealGate as Record<string, unknown>).TrustMemory as
     | { fromJSON(data: Record<string, unknown[]>): { toJSON(): unknown }; new(): { toJSON(): unknown } }
     | undefined
@@ -99,7 +108,11 @@ export async function runGateCode(opts: {
     .filter(e => e.type === 'command')
     .map(e => ({ type: 'command' as const, command: e.command ?? '', exit_code: e.exit_code ?? 0, output: e.output ?? '' }))
 
-  const reviewFn = opts.sealReviewFn ?? ((input: unknown) => Seal.review(input as Parameters<typeof Seal.review>[0]))
+  // Mandatory Property policy cannot be bypassed by a custom ordinary-review hook.
+  const reviewFn = propertyBridge
+    ? ((input: unknown) => (Seal.review as unknown as (input: unknown, options: unknown) => Promise<unknown>)(input,
+      { propertyEvidenceVerifier: propertyBridge.verify }))
+    : opts.sealReviewFn ?? ((input: unknown) => Seal.review(input as Parameters<typeof Seal.review>[0]))
 
   const sealResult = await reviewFn({
     artifact_type: 'code_diff',
@@ -111,7 +124,8 @@ export async function runGateCode(opts: {
       build_log: '',
       references,
     },
-    context: { agent_id: 'orca-agent', agent_role: 'developer' },
+    context: { agent_id: 'orca-agent', agent_role: 'developer',
+      ...(propertyBridge ? { property_contracts: propertyBridge.contracts } : {}) },
   }) as {
     verdict: GateVerdict
     trust_score: number

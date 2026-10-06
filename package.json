@@ -1,6 +1,6 @@
 {
   "name": "@gotako/orca",
-  "version": "1.6.2-beta.5",
+  "version": "1.6.2-beta.7",
   "description": "Intent-guided spec-driven design framework with TDD superpowers — Intent → Spec → TDD → Trust",
   "type": "module",
   "main": "dist/index.js",
@@ -26,7 +26,10 @@
     "examples/trading",
     "skills/verify",
     "skills/tdd",
-    "skills/spec"
+    "skills/spec",
+    "vendor/seal-gate-0.5.1.tgz",
+    "vendor/seal-gate-0.5.1.sha256",
+    "docs/property-seal.md"
   ],
   "scripts": {
     "build": "tsc",
@@ -47,8 +50,11 @@
   "dependencies": {
     "@gotako/hammerhead-debug": "0.5.0-beta.0",
     "fast-check": "4.10.2",
-    "seal-gate": "0.5.0",
+    "seal-gate": "file:vendor/seal-gate-0.5.1.tgz",
     "yaml": "^2.8.3",
     "zod": "^4.3.6"
-  }
+  },
+  "bundledDependencies": [
+    "seal-gate"
+  ]
 }
