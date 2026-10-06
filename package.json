@@ -1,6 +1,6 @@
 {
   "name": "@gotako/orca",
-  "version": "1.6.2-beta.4",
+  "version": "1.6.2-beta.5",
   "description": "Intent-guided spec-driven design framework with TDD superpowers — Intent → Spec → TDD → Trust",
   "type": "module",
   "main": "dist/index.js",
@@ -22,6 +22,7 @@
     "docs/outcome-workflows.md",
     "docs/executable-evidence.md",
     "docs/property-evidence.md",
+    "docs/loop-evidence.md",
     "examples/trading",
     "skills/verify",
     "skills/tdd",
@@ -33,6 +34,7 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@gotako/pilotfish": "0.2.0-beta.3",
     "@types/node": "^25.6.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"

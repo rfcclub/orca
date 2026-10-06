@@ -1,12 +1,13 @@
 import { createHash } from 'crypto'
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs'
 import { join, resolve } from 'path'
-import { execFileSync } from 'child_process'
 import { parseSelfCheck } from './self-check.js'
 import { readPhaseJson, recordGateVerdict, sha256String } from './phase-json.js'
 import { readPlanJson } from './plan-json.js'
 import { TransitionGuard } from './transition-guard.js'
+import { reviewedCodeDiff } from './code-diff.js'
 import type { GateVerdict, VerdictEntry } from './types.js'
+import { executeTests, sourceBinding, validateExecutionReceipt } from '../verify/execution.js'
 
 export interface GateCodeResult {
   verdict: GateVerdict
@@ -29,11 +30,23 @@ export async function runGateCode(opts: {
   skipStateCheck?: boolean
   sealReviewFn?: (input: unknown) => Promise<unknown>
   llmProvider?: string
+  selfCheckPath?: string
+  /** Nested task review does not authorize the overall phase exit. */
+  taskId?: string
 }): Promise<GateCodeResult> {
   const guard = new TransitionGuard(opts.changeDir)
-  guard.canEnter('gate-code', opts.skipStateCheck)
+  guard.canEnter(opts.taskId ? 'apply' : 'gate-code', opts.skipStateCheck)
+  if (opts.taskId) {
+    const task = readPlanJson(opts.changeDir).tasks.find(t => t.id === opts.taskId)
+    const root = opts.projectRoot ?? process.cwd()
+    if (task?.status !== 'complete' || !task.green || !validateExecutionReceipt(root, task.green) ||
+        JSON.stringify(task.green.source) !== JSON.stringify(sourceBinding(root))) throw new Error('Fresh completed task required for nested gate')
+    const fresh = executeTests(root, task.green.selection)
+    if (fresh.outcome !== 'green' || JSON.stringify(fresh.tests) !== JSON.stringify(task.green.tests) ||
+        fresh.runner.sha256 !== task.green.runner.sha256) throw new Error('Nested task gate GREEN changed')
+  }
 
-  const selfCheckPath = join(opts.changeDir, 'self-check.md')
+  const selfCheckPath = opts.selfCheckPath ?? join(opts.changeDir, 'self-check.md')
   if (!existsSync(selfCheckPath)) {
     throw new Error('self-check.md required before gate-code — run orca self-check first')
   }
@@ -46,10 +59,7 @@ export async function runGateCode(opts: {
   // Capture current diff — binds this verdict to exact code state
   let diffOutput = ''
   try {
-    diffOutput = execFileSync('git', ['diff', 'HEAD'], {
-      cwd: opts.changeDir,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    }).toString()
+    diffOutput = reviewedCodeDiff(opts.changeDir)
   } catch {
     // Not in a git repo or no diff — proceed without binding
   }
@@ -138,11 +148,12 @@ export async function runGateCode(opts: {
   // Write verdict file
   const verdictDir = join(opts.changeDir, '.harness', 'gate-verdicts')
   mkdirSync(verdictDir, { recursive: true })
-  writeFileSync(join(verdictDir, `${Date.now()}.json`), JSON.stringify({ ...resultWithProbe.result, ...verdictEntry }, null, 2))
+  writeFileSync(join(verdictDir, `${Date.now()}.json`), JSON.stringify({ ...resultWithProbe.result, ...verdictEntry,
+    ...(opts.taskId ? { task_id: opts.taskId } : {}) }, null, 2))
 
   // Update phase.json
   try {
-    recordGateVerdict(opts.changeDir, verdictEntry)
+    if (!opts.taskId) recordGateVerdict(opts.changeDir, verdictEntry)
   } catch {
     // phase.json may not exist in degraded mode
   }

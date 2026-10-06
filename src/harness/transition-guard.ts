@@ -1,9 +1,9 @@
 import { createHash } from 'crypto'
 import { existsSync, readFileSync } from 'fs'
 import { join, resolve } from 'path'
-import { execFileSync } from 'child_process'
 import { readPhaseJson, sha256File, LIFECYCLE } from './phase-json.js'
 import type { Phase, PhaseJson } from './types.js'
+import { reviewedCodeDiff } from './code-diff.js'
 
 export class TransitionGuard {
   constructor(private changeDir: string) {}
@@ -60,7 +60,7 @@ export class TransitionGuard {
       }
       try {
         const currentDiff = createHash('sha256')
-          .update(execFileSync('git', ['diff', 'HEAD'], { cwd: this.changeDir, stdio: ['pipe', 'pipe', 'pipe'] }).toString())
+          .update(reviewedCodeDiff(this.changeDir))
           .digest('hex')
         if (v.bound_diff_sha256 !== currentDiff) {
           throw new Error(

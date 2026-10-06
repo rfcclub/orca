@@ -9,6 +9,10 @@ human review. Findings, decision acceptance, tested code and live migration have
 separate completion boundaries. Executable verify runs the local Vitest runner;
 the explicit `--coverage-only` mode remains historical bookkeeping.
 
+For approved plans executed through Pilotfish with bounded attempts, local ready
+polling and durable resume, see [Bounded execution loop](./docs/loop-evidence.md).
+Configure the model driver explicitly; ordinary file workflows require no GitHub account.
+
 > Current as of v1.6.1. For the harness/debug-pipeline side (install
 > across all four packages, seal-gate/pilotfish/hammerhead-debug
 > integration, full walkthrough), see [HARNESS.md](./HARNESS.md).
