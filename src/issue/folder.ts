@@ -44,7 +44,9 @@ function renderIntent(input: CreateChangeInput): string {
     '',
     `Issue: ${issueRef(repo, issue.number)}`,
     '',
-    `Generated from the approved issue. The issue is the intent of record; its edit history is on GitHub.`,
+    input.approved
+      ? `Generated from the approved issue. The issue is the intent of record; its edit history is on GitHub.`
+      : `Generated from a bug issue. A bug fix needs no intent approval; the PR approval is the gate. The issue is the intent of record; its edit history is on GitHub.`,
     '',
     issue.body.trim(),
     '',
@@ -57,8 +59,12 @@ function renderIntent(input: CreateChangeInput): string {
     }
     parts.push('');
   }
-  parts.push('## Intent Approval', '', 'Status: APPROVED', '');
-  if (approvedBy) parts.push(`Approved by: ${approvedBy}`);
+  if (input.approved) {
+    parts.push('## Intent Approval', '', 'Status: APPROVED', '');
+    if (approvedBy) parts.push(`Approved by: ${approvedBy}`);
+  } else {
+    parts.push('## Intent Approval', '', 'Status: NOT REQUIRED (bug fix: the PR approval is the gate)', '');
+  }
   parts.push(`Date: ${date}`, '');
   return parts.join('\n');
 }
@@ -77,15 +83,16 @@ function renderBugTasks(input: CreateChangeInput): string {
 }
 
 /**
- * Creates the change folder from an approved, conforming issue. Writes nothing
- * unless every check passes. A bug gets intent.md + tasks.md only (no spec, no design).
+ * Creates the change folder from a conforming issue. An enhancement must be approved; a bug
+ * needs no intent approval (the PR approval is the gate). Writes nothing unless every check
+ * passes. A bug gets intent.md + tasks.md only (no spec, no design).
  */
 export function createChangeFromIssue(input: CreateChangeInput): { dir: string; files: string[] } {
   const { issue, approved, changesDir, name } = input;
 
   if (!NAME_RE.test(name)) throw new Error(`invalid change name "${name}" (use lowercase letters, digits and hyphens)`);
-  if (!approved) throw new Error(`issue #${issue.number} is not approved`);
   const c = classifyIssue(issue);
+  if (!approved && c.shape !== 'bug') throw new Error(`issue #${issue.number} is not approved`);
   if (c.result !== 'conforming') throw new Error(`issue #${issue.number} is non-conforming: ${c.reason ?? 'unknown'}`);
 
   const dir = join(changesDir, name);
