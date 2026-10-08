@@ -1,7 +1,7 @@
 name: Orca Verify
 on:
   pull_request:
-    branches: [master]
+    branches: [master, "feat/**"]
 
 jobs:
   verify:
@@ -15,4 +15,5 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - run: pnpm exec vitest run --maxWorkers=2
       - run: node dist/cli/index.js verify

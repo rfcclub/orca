@@ -5,6 +5,7 @@ import { calculateCoverage } from '../../tdd/traceability.js';
 import { TransitionGuard } from '../../harness/transition-guard.js';
 import { findUnacceptedProposed } from '../../issue/proposed.js';
 import { VERIFY_FILE } from '../../legacy.js';
+import { hasApprovalRecord } from '../../harness/gate-plan.js';
 import { executeTests, hashBytes, type ExecutionReceipt, type TestSelection } from '../../verify/execution.js';
 import { replayTests, type ReplayReceipt } from '../../verify/replay.js';
 import { readTestContract } from '../../verify/change.js';
@@ -32,6 +33,18 @@ export function cmdVerify(name?: string, opts: VerifyOptions = {}): void {
       continue;
     }
 
+    // Bulk verification inventories pending intent work without certifying it.
+    // Explicit selection and approved/malformed executable work remain fail-closed.
+    const dir = getChangeDir(changeName);
+    const intentFile = join(dir, 'intent.md');
+    if (!name && !findChangeSpecFiles(dir, changeName).length && existsSync(intentFile) &&
+        !['proposal.md', 'design.md', 'tasks.md', 'plan.json'].some(file => existsSync(join(dir, file)))) {
+      const intent = readFileSync(intentFile, 'utf8');
+      if (/^Status:\s*DRAFT\b/m.test(intent) && !hasApprovalRecord(intent)) {
+        console.log(`SKIP ${changeName}: unapproved intent-only draft (pending, not verified)`);
+        continue;
+      }
+    }
     if (!verifyChange(changeName, opts)) process.exitCode = 1;
   }
 }

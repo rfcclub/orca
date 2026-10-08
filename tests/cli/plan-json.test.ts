@@ -13,8 +13,8 @@ import { fileURLToPath } from 'url'
 // (DAP-via-debug-skill + the new standalone CLI), not the old hand-rolled
 // dap-client the handoff was written against.
 
-const orcaCli = fileURLToPath(new URL('../../dist/cli/index.js', import.meta.url))
-const hammerheadCli = fileURLToPath(new URL('../../node_modules/.bin/hammerhead-debug', import.meta.url))
+const orcaCli = process.env.ORCA_TEST_CLI ?? fileURLToPath(new URL('../../dist/cli/index.js', import.meta.url))
+const hammerheadCli = process.env.ORCA_TEST_HAMMERHEAD_CLI ?? fileURLToPath(new URL('../../node_modules/.bin/hammerhead-debug', import.meta.url))
 
 let cwd: string
 const changeDir = 'orca/changes/test-change'

@@ -1,6 +1,6 @@
 import { it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, symlinkSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
@@ -210,4 +210,26 @@ it('symlinked harness cannot redirect loop state outside the project', async () 
     const { readdirSync } = await import('node:fs');
     expect(readdirSync(outside)).toEqual([]);
   } finally { f.clean(); rmSync(outside, { recursive: true, force: true }); }
+});
+
+it('safe-debug-handoff-shell-literals: pasted handoff preserves arguments without shell expansion', async () => {
+  const f = fixture();
+  try {
+    const id = "T1' $(touch PWNED) `touch PWNED2`";
+    f.plan.tasks[0].id = id; f.save();
+    writeFileSync(join(f.dir, '.harness/gate-verdicts/1-plan.json'), JSON.stringify({ kind: 'plan', verdict: 'PASS',
+      artifact: 'plan.json', bound_artifact_sha256: hash(readFileSync(join(f.dir, 'plan.json'), 'utf8')) }));
+    const api = await import(modulePath);
+    const stopped = await api.runLoop(f.options, { ...f.deps, attempt: async () => ({ status: 'escalate' }) });
+    expect(stopped.reason).toBe('Attempt budget exhausted');
+    const bin = join(f.root, 'bin'); mkdirSync(bin);
+    const capture = join(f.root, 'argv.json');
+    writeFileSync(join(bin, 'hammerhead-debug'), `#!${process.execPath}\nrequire('node:fs').writeFileSync(process.env.CAPTURE, JSON.stringify(process.argv.slice(2)));\n`, { mode: 0o755 });
+    execFileSync('/bin/sh', ['-c', stopped.next_command!], { cwd: f.root,
+      env: { ...process.env, PATH: bin + ':/usr/bin:/bin', CAPTURE: capture } });
+    expect(JSON.parse(readFileSync(capture, 'utf8'))).toEqual(['open', '--symptom', id + ': test still failing',
+      '--repro', "orca verify 'toy'", '--dir', f.dir]);
+    expect(existsSync(join(f.root, 'PWNED'))).toBe(false);
+    expect(existsSync(join(f.root, 'PWNED2'))).toBe(false);
+  } finally { f.clean(); }
 });
