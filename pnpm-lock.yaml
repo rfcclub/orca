@@ -9,11 +9,17 @@ importers:
   .:
     dependencies:
       '@gotako/hammerhead-debug':
-        specifier: 0.5.0-beta.0
-        version: 0.5.0-beta.0
+        specifier: file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz
+        version: file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz
+      '@gotako/pilotfish':
+        specifier: file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz
+        version: file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz(@gotako/orca@+)
+      fast-check:
+        specifier: 4.10.2
+        version: 4.10.2
       seal-gate:
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: file:vendor/seal-gate-0.5.2.tgz
+        version: file:vendor/seal-gate-0.5.2.tgz
       yaml:
         specifier: ^2.8.3
         version: 2.9.0
@@ -21,6 +27,9 @@ importers:
         specifier: ^4.3.6
         version: 4.4.3
     devDependencies:
+      '@gotako/orca':
+        specifier: link:.
+        version: 'link:'
       '@types/node':
         specifier: ^25.6.0
         version: 25.9.5
@@ -33,9 +42,20 @@ importers:
 
 packages:
 
-  '@gotako/hammerhead-debug@0.5.0-beta.0':
-    resolution: {integrity: sha512-YtiEINpuv3sxfWaMvTk/dQg0q+sJstWuceiDqXkzG26F3rp2gvpMz0OvB/huotaOz572xqn2aEqR71jxHqUM4w==}
+  '@gotako/hammerhead-debug@file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz':
+    resolution: {integrity: sha512-kE7VUVuLIiHLH+QUKNDCjP58AcotemhBTtcY2glEcTo0frYpXooka9aaHUt80A2VUMZZ/mSRbumg7k9ZfzR0hQ==, tarball: file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz}
+    version: 0.5.0-beta.2
     hasBin: true
+
+  '@gotako/pilotfish@file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz':
+    resolution: {integrity: sha512-f24CF73bOLB9H5EzgWKgDARVA+mqVK07bvR6k7wtz55UeVFbbhcXeUGeQMZZCiUT1+ESPrS32zsnCPeDSt7kIA==, tarball: file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz}
+    version: 0.2.0-beta.6
+    hasBin: true
+    peerDependencies:
+      '@gotako/orca': '>=1.6.2-beta.7 <2'
+    peerDependenciesMeta:
+      '@gotako/orca':
+        optional: true
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
@@ -205,6 +225,10 @@ packages:
     resolution: {integrity: sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==}
     engines: {node: '>=12.0.0'}
 
+  fast-check@4.10.2:
+    resolution: {integrity: sha512-iK2f+YrcmoeGqk6fA0ea2bptcu/itMIm4NfEozq6N25+aG6h7s5HZbB/k1aV7b5w5sFLMCbbtRUsTVR+BgC3xw==}
+    engines: {node: '>=12.17.0'}
+
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
     engines: {node: '>=12.0.0'}
@@ -319,13 +343,17 @@ packages:
     resolution: {integrity: sha512-u82N74LFzG8ca+dD8puPnplTXoGH4fTPpVGuIbt36G3qvNlkvfD0lEAZSxaly3KX8TS/L1A1gsCEmvKmBcVbkQ==}
     engines: {node: ^10 || ^12 || >=14}
 
+  pure-rand@8.4.2:
+    resolution: {integrity: sha512-vvuOGgcuPJAirlHvuQw1TrOiw7ptaIXXmIbNuiNOY6lNGJJH49PQ1Kj4nd783nPdQhQdicgOjVI2yI/9BD6/Ng==}
+
   rolldown@1.2.3:
     resolution: {integrity: sha512-rn9wpmxplLf7NLNyCk9FyWh3FM43DbY8jOzCdEPzH7uflhTftRbCEpqi6Ly2osgoU8OwObtmavMbWLaWy4LX7A==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
-  seal-gate@0.5.0:
-    resolution: {integrity: sha512-ELszpUMQ5xCkUvEvxmp+IKfQCf3NcPZNkQdFDG4Sb2Z9f9Rh7RAA2UF9rG9McUXgvvpBfdKIc499f5LPOVHkCA==}
+  seal-gate@file:vendor/seal-gate-0.5.2.tgz:
+    resolution: {integrity: sha512-WlmW4vqd5Nxa23iFi9pUNf1b5FeO290ephTzJjj9sKFB0zRrX9JE6BYNYZcwDvKjp4bAXnqak30lQnDp9UdGrQ==, tarball: file:vendor/seal-gate-0.5.2.tgz}
+    version: 0.5.2
     engines: {node: '>=22.5.0'}
     hasBin: true
 
@@ -464,7 +492,11 @@ packages:
 
 snapshots:
 
-  '@gotako/hammerhead-debug@0.5.0-beta.0': {}
+  '@gotako/hammerhead-debug@file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz': {}
+
+  '@gotako/pilotfish@file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz(@gotako/orca@+)':
+    optionalDependencies:
+      '@gotako/orca': link:.
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
@@ -586,6 +618,10 @@ snapshots:
 
   expect-type@1.4.0: {}
 
+  fast-check@4.10.2:
+    dependencies:
+      pure-rand: 8.4.2
+
   fdir@6.5.0(picomatch@4.0.5):
     optionalDependencies:
       picomatch: 4.0.5
@@ -662,6 +698,8 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
+  pure-rand@8.4.2: {}
+
   rolldown@1.2.3:
     dependencies:
       '@oxc-project/types': 0.143.0
@@ -682,7 +720,7 @@ snapshots:
       '@rolldown/binding-win32-arm64-msvc': 1.2.3
       '@rolldown/binding-win32-x64-msvc': 1.2.3
 
-  seal-gate@0.5.0: {}
+  seal-gate@file:vendor/seal-gate-0.5.2.tgz: {}
 
   siginfo@2.0.0: {}
 

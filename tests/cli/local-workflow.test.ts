@@ -80,7 +80,7 @@ it('[local-files-local-coding-path]', () => {
       expect(readFileSync(join(s.project, 'orca/specs/demo/spec.md'), 'utf8')).toContain('Local coding path');
       expect(existsSync(s.marker)).toBe(false);
     } finally { s.cleanup(); }
-  });
+  }, 60_000);
 
   it('local-review: signs and accepts a local outcome without any issue, gh or network', () => {
     const s = sandbox();

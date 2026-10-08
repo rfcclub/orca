@@ -1,12 +1,15 @@
 import { createHash } from 'crypto'
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs'
-import { join, resolve } from 'path'
-import { execFileSync } from 'child_process'
+import { basename, join, resolve } from 'path'
 import { parseSelfCheck } from './self-check.js'
 import { readPhaseJson, recordGateVerdict, sha256String } from './phase-json.js'
 import { readPlanJson } from './plan-json.js'
 import { TransitionGuard } from './transition-guard.js'
+import { reviewedCodeDiff } from './code-diff.js'
+import { parseSpec } from '../spec/parser.js'
+import { createPropertySealBridge } from './property-seal.js'
 import type { GateVerdict, VerdictEntry } from './types.js'
+import { executeTests, sourceBinding, validateExecutionReceipt } from '../verify/execution.js'
 
 export interface GateCodeResult {
   verdict: GateVerdict
@@ -29,11 +32,23 @@ export async function runGateCode(opts: {
   skipStateCheck?: boolean
   sealReviewFn?: (input: unknown) => Promise<unknown>
   llmProvider?: string
+  selfCheckPath?: string
+  /** Nested task review does not authorize the overall phase exit. */
+  taskId?: string
 }): Promise<GateCodeResult> {
   const guard = new TransitionGuard(opts.changeDir)
-  guard.canEnter('gate-code', opts.skipStateCheck)
+  guard.canEnter(opts.taskId ? 'apply' : 'gate-code', opts.skipStateCheck)
+  if (opts.taskId) {
+    const task = readPlanJson(opts.changeDir).tasks.find(t => t.id === opts.taskId)
+    const root = opts.projectRoot ?? process.cwd()
+    if (task?.status !== 'complete' || !task.green || !validateExecutionReceipt(root, task.green) ||
+        JSON.stringify(task.green.source) !== JSON.stringify(sourceBinding(root))) throw new Error('Fresh completed task required for nested gate')
+    const fresh = executeTests(root, task.green.selection)
+    if (fresh.outcome !== 'green' || JSON.stringify(fresh.tests) !== JSON.stringify(task.green.tests) ||
+        fresh.runner.sha256 !== task.green.runner.sha256) throw new Error('Nested task gate GREEN changed')
+  }
 
-  const selfCheckPath = join(opts.changeDir, 'self-check.md')
+  const selfCheckPath = opts.selfCheckPath ?? join(opts.changeDir, 'self-check.md')
   if (!existsSync(selfCheckPath)) {
     throw new Error('self-check.md required before gate-code — run orca self-check first')
   }
@@ -46,10 +61,7 @@ export async function runGateCode(opts: {
   // Capture current diff — binds this verdict to exact code state
   let diffOutput = ''
   try {
-    diffOutput = execFileSync('git', ['diff', 'HEAD'], {
-      cwd: opts.changeDir,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    }).toString()
+    diffOutput = reviewedCodeDiff(opts.changeDir)
   } catch {
     // Not in a git repo or no diff — proceed without binding
   }
@@ -58,6 +70,13 @@ export async function runGateCode(opts: {
   // Load SEAL and TrustMemory
   const sealGate = await import('seal-gate')
   const { Seal } = sealGate
+  const mandatoryProperties = parseSpec(specContent ?? '').requirements.some(req =>
+    (req.strength === 'MUST' || req.strength === 'SHALL') && (req.properties?.length ?? 0) > 0)
+  if (mandatoryProperties && typeof (sealGate as Record<string, unknown>).evaluatePropertyEvidence !== 'function') {
+    throw new Error('Seal Property enforcement API unavailable; install the reviewed Seal candidate before gating mandatory Properties')
+  }
+  const propertyBridge = mandatoryProperties
+    ? createPropertySealBridge(opts.projectRoot ?? process.cwd(), opts.changeDir, basename(opts.changeDir)) : undefined
   const TrustMemory = (sealGate as Record<string, unknown>).TrustMemory as
     | { fromJSON(data: Record<string, unknown[]>): { toJSON(): unknown }; new(): { toJSON(): unknown } }
     | undefined
@@ -89,7 +108,11 @@ export async function runGateCode(opts: {
     .filter(e => e.type === 'command')
     .map(e => ({ type: 'command' as const, command: e.command ?? '', exit_code: e.exit_code ?? 0, output: e.output ?? '' }))
 
-  const reviewFn = opts.sealReviewFn ?? ((input: unknown) => Seal.review(input as Parameters<typeof Seal.review>[0]))
+  // Mandatory Property policy cannot be bypassed by a custom ordinary-review hook.
+  const reviewFn = propertyBridge
+    ? ((input: unknown) => (Seal.review as unknown as (input: unknown, options: unknown) => Promise<unknown>)(input,
+      { propertyEvidenceVerifier: propertyBridge.verify }))
+    : opts.sealReviewFn ?? ((input: unknown) => Seal.review(input as Parameters<typeof Seal.review>[0]))
 
   const sealResult = await reviewFn({
     artifact_type: 'code_diff',
@@ -101,7 +124,8 @@ export async function runGateCode(opts: {
       build_log: '',
       references,
     },
-    context: { agent_id: 'orca-agent', agent_role: 'developer' },
+    context: { agent_id: 'orca-agent', agent_role: 'developer',
+      ...(propertyBridge ? { property_contracts: propertyBridge.contracts } : {}) },
   }) as {
     verdict: GateVerdict
     trust_score: number
@@ -138,11 +162,12 @@ export async function runGateCode(opts: {
   // Write verdict file
   const verdictDir = join(opts.changeDir, '.harness', 'gate-verdicts')
   mkdirSync(verdictDir, { recursive: true })
-  writeFileSync(join(verdictDir, `${Date.now()}.json`), JSON.stringify({ ...resultWithProbe.result, ...verdictEntry }, null, 2))
+  writeFileSync(join(verdictDir, `${Date.now()}.json`), JSON.stringify({ ...resultWithProbe.result, ...verdictEntry,
+    ...(opts.taskId ? { task_id: opts.taskId } : {}) }, null, 2))
 
   // Update phase.json
   try {
-    recordGateVerdict(opts.changeDir, verdictEntry)
+    if (!opts.taskId) recordGateVerdict(opts.changeDir, verdictEntry)
   } catch {
     // phase.json may not exist in degraded mode
   }
