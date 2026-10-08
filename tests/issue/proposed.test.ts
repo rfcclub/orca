@@ -39,7 +39,7 @@ function makeChange(intentMd: string | null): string {
 
 function runVerify(changeDir: string) {
   process.chdir(root);
-  cmdVerify('demo');
+  cmdVerify('demo', { coverageOnly: true });
   return JSON.parse(readFileSync(join(changeDir, '.orca-verify.json'), 'utf-8'));
 }
 

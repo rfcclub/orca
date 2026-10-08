@@ -1,12 +1,13 @@
 import { basename, dirname, join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, readdirSync } from 'fs';
-import { getChangeDir, getSpecsDir, changeExists, findChangeSpecFiles } from '../utils.js';
+import { getChangeDir, getProjectRoot, getSpecsDir, changeExists, findChangeSpecFiles } from '../utils.js';
 import { parseDeltaSpec, parseSpec, mergeSpecs } from '../../spec/index.js';
 import { formatSpec } from '../../spec/format.js';
 import { validateSpec } from '../../spec/validator.js';
 import { extractLessons, formatLessonsMarkdown, generatePolicyDiff } from '../../harness/learn-loop.js';
 import type { GateHistoryEntry } from '../../harness/learn-loop.js';
 import { verifyFilePath } from '../../legacy.js';
+import { checkChangeEvidence } from '../../verify/change.js';
 
 export function cmdArchive(name: string, options: { force?: boolean; reason?: string }): void {
   if (!changeExists(name)) {
@@ -24,9 +25,10 @@ export function cmdArchive(name: string, options: { force?: boolean; reason?: st
   }
 
   let verified = false;
-  if (existsSync(verifyPath)) {
-    const verifyResult = JSON.parse(readFileSync(verifyPath, 'utf-8'));
-    verified = verifyResult.passed;
+  if (existsSync(verifyPath) && !options.force) {
+    const evidence = checkChangeEvidence(getProjectRoot(), changeDir, name);
+    verified = evidence.valid;
+    if (!verified) console.error(`✗  ${evidence.reasons.join('; ')}`);
   }
 
   if (!verified && !options.force) {
@@ -83,7 +85,7 @@ export function cmdArchive(name: string, options: { force?: boolean; reason?: st
     console.log(`  ⚠  Forced archive (reason: ${options.reason})`);
   }
   if (newVersion) {
-    console.log(`  🏷  Tagged v${newVersion}`);
+    console.log(`  Package version: ${newVersion}`);
   }
 }
 
@@ -191,9 +193,11 @@ function mergeOneSpecIntoLiving(
 
 export function bumpVersion(pkgPath: string): string {
   const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
-  const parts = pkg.version.split('.').map(Number);
-  parts[2] += 1;
-  const newVersion = parts.join('.');
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z][a-zA-Z0-9-]*)\.(\d+))?$/.exec(pkg.version);
+  if (!match) throw new Error(`Unsupported package version: ${pkg.version}`);
+  const newVersion = match[4]
+    ? `${match[1]}.${match[2]}.${match[3]}-${match[4]}.${Number(match[5]) + 1}`
+    : `${match[1]}.${match[2]}.${Number(match[3]) + 1}`;
   pkg.version = newVersion;
   writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8');
   return newVersion;

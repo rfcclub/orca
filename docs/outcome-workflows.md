@@ -179,11 +179,12 @@ Use `outcome: implementation`, approved SC references and the code revision scop
 Continue intent → spec → tasks → RED/GREEN/REFACTOR → executable tests → gates.
 Link runner evidence, not an assertion of success.
 
-Legacy verify currently counts YAML status without running tests; plan-json can
-accept `true`. Therefore this checker reports implementation as `unsupported`
-until a trustworthy executable-evidence integration lands. No review overrides
-that limitation. Run actual tests independently and retain JSON/log evidence.
-A composed task promising implementation remains incomplete.
+Implementation outcomes require a hashed executable `.orca-verify.json` receipt
+with `mode: executable`, `passed: true`, and `execution_verified: true`. The
+checker derives the current spec/mapping, verifies source/test/runner freshness,
+and executes assertions again; those flags alone are insufficient. Offline
+checking still leaves authenticated human review as a separate acceptance
+boundary. See [Executable evidence](./executable-evidence.md).
 
 Verifier remediation owns runner results, bound test/source hashes, genuine RED
 and bug-fix base/head replay. Property grammar, RUNS, seed, generator coverage,

@@ -182,6 +182,15 @@ describe('task outcome contracts', () => {
     expect(result.complete).toBe(false);
   });
 
+  it('does not accept self-authored executable flags as execution evidence', async () => {
+    const fake = receipt('tests', '.orca-verify.json', JSON.stringify({
+      mode: 'executable', passed: true, execution_verified: true,
+    }));
+    writeContract([{ id: 'code', outcome: 'implementation', scope, criteria: ['SC-2'], evidence: [fake] }]);
+    const result = await checkOutcomes(dir, { review: reviewed });
+    expect(result.complete).toBe(false);
+  });
+
   it('unauthenticated-review: review tokens bind all contract content, not only the stage ID', async () => {
     const original = writeContract([decision()]);
     const digest = contractDigest(original);

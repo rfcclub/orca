@@ -21,7 +21,7 @@ Iron Law: no production code without a failing test first. RED → GREEN → REF
 1. **Iron Law:** If any production code exists without a preceding failing test, **delete the code**, write the test first, then re-implement.
 2. **RED phase:** Write a test that fails for the right reason:
    - Test exactly one scenario (or cohesive subset)
-   - Test name references scenario ID: `SC-001: user can login with valid credentials`
+   - Test name references scenario ID: `[user-login-valid-credentials] user can login`
    - Run test → confirm RED (failure is informative, not a crash)
 3. **GREEN phase:** Write minimal production code to pass the test:
    - No extra functionality beyond what the test demands
@@ -32,16 +32,19 @@ Iron Law: no production code without a failing test first. RED → GREEN → REF
    - Extract helpers if needed
    - Tests must still pass after refactor
 5. **Commit:** `feat: SC-001 — user login (tdd)`
-6. **After all tasks complete:** Generate `.traceability.yaml` mapping:
+6. **After all tasks complete:** Generate `.traceability.yaml` mapping.
+   `status` is optional bookkeeping and never establishes execution:
    ```yaml
    scenarios:
-     SC-001:
+     - scenario: user-login-valid-credentials
        test: tests/auth/login.test.ts
-       status: pass
-     SC-002:
+     - scenario: user-logout-session-cleared
        test: tests/auth/logout.test.ts
-       status: pass
    ```
+7. Record scenario RED with `orca record-red <name>` or task RED with
+   `orca plan-json start <name> <task-id>` before production edits. Completion
+   executes the unchanged task test directly; arbitrary shell commands are
+   unsupported. Run executable verify after GREEN.
 
 ## Output
 

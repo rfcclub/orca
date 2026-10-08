@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, readdirSync } from 'fs';
+import { mkdtempSync, mkdirSync, symlinkSync, writeFileSync, readFileSync, existsSync, rmSync, readdirSync } from 'fs';
 import { generateKeyPairSync, createHash } from 'crypto';
-import { spawnSync } from 'child_process';
+import { execFileSync, spawnSync } from 'child_process';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import { contractDigest } from '../../src/harness/outcomes.ts';
@@ -14,6 +14,7 @@ function sandbox() {
   mkdirSync(project); mkdirSync(bin);
   const marker = join(root, 'gh-called');
   writeFileSync(join(bin, 'gh'), `#!/bin/sh\nprintf called > '${marker}'\nexit 99\n`, { mode: 0o755 });
+  symlinkSync('/usr/bin/git', join(bin, 'git'));
   const block = join(root, 'no-network.cjs');
   writeFileSync(block, `
     const deny=()=>{throw new Error('Network forbidden in local workflow')};
@@ -44,6 +45,19 @@ describe('standalone local workflow CLI', () => {
       expect(plan.stdout).toContain('PASS');
       const spec = '## ADDED Requirements\n### Requirement: Local files\nOrca MUST preserve local files.\n#### Scenario: Local coding path\n- **WHEN** the operator runs the local workflow\n- **THEN** local files remain usable\n';
       writeFileSync(join(dir, 'specs/demo/spec.md'), spec);
+      writeFileSync(join(s.project, 'package.json'), JSON.stringify({ name: 'fixture', version: '1.0.0', type: 'module' }));
+      writeFileSync(join(s.project, '.gitignore'), 'node_modules\n');
+      mkdirSync(join(s.project, 'tests'));
+      writeFileSync(join(s.project, 'tests/local.test.js'), `import {it,expect} from 'vitest';
+import {readFileSync} from 'node:fs';
+it('[local-files-local-coding-path]', () => {
+  for(const name of ['intent.md','tasks.md','design.md'])
+    expect(readFileSync('orca/changes/demo/'+name,'utf8').trim().length).toBeGreaterThan(0);
+});`);
+      execFileSync('/usr/bin/git', ['init', '-q'], { cwd: s.project });
+      execFileSync('/usr/bin/git', ['add', '.'], { cwd: s.project });
+      execFileSync('/usr/bin/git', ['-c', 'user.name=fixture', '-c', 'user.email=f@example.invalid', 'commit', '-qm', 'fixture'], { cwd: s.project });
+      symlinkSync(resolve('node_modules'), join(s.project, 'node_modules'), 'dir');
       writeFileSync(join(s.project, 'local-test.cjs'), `const assert=require('node:assert/strict');const fs=require('node:fs');for(const name of ['intent.md','tasks.md','design.md'])assert.ok(fs.readFileSync('orca/changes/demo/'+name,'utf8').trim());console.log('PASS local files remain usable');`);
       const test = spawnSync(process.execPath, ['local-test.cjs'], { cwd: s.project, env: s.env, encoding: 'utf8' });
       expect(test.status).toBe(0);
@@ -51,19 +65,22 @@ describe('standalone local workflow CLI', () => {
       const gate = s.run('gate-code', 'demo');
       expect(gate.status, gate.stderr + gate.stdout).toBe(0);
       expect(gate.stdout).toContain('PASS');
-      writeFileSync(join(dir, '.traceability.yaml'), JSON.stringify({ scenarios: [{ scenario: 'local-files-local-coding-path', status: 'passing' }] }));
-      expect(s.run('verify', 'demo').stdout).toContain('PASS');
+      writeFileSync(join(dir, '.traceability.yaml'), JSON.stringify({ scenarios: [{
+        scenario: 'local-files-local-coding-path', test: 'tests/local.test.js', status: 'failing',
+      }] }));
+      const verified = s.run('verify', 'demo');
+      expect(verified.status, verified.stdout + verified.stderr).toBe(0);
+      expect(verified.stdout).toContain('PASS');
       expect(JSON.parse(readFileSync(join(dir, '.orca-verify.json'), 'utf8')).passed).toBe(true);
       expect(s.run('check-outcomes', 'demo').status).toBe(0);
       expect(s.run('status').status).toBe(0);
-      writeFileSync(join(s.project, 'package.json'), JSON.stringify({ name: 'fixture', version: '1.0.0' }));
       const archive = s.run('archive', 'demo');
-      expect(archive.status, archive.stderr).toBe(0);
+      expect(archive.status, archive.stdout + archive.stderr).toBe(0);
       expect(readdirSync(join(s.project, 'orca/archive'))).toHaveLength(1);
       expect(readFileSync(join(s.project, 'orca/specs/demo/spec.md'), 'utf8')).toContain('Local coding path');
       expect(existsSync(s.marker)).toBe(false);
     } finally { s.cleanup(); }
-  });
+  }, 60_000);
 
   it('local-review: signs and accepts a local outcome without any issue, gh or network', () => {
     const s = sandbox();

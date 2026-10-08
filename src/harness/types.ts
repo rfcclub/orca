@@ -96,6 +96,9 @@ export interface PlanTask {
   consumes: TaskArtifact[]
   produces: TaskArtifact[]
   debug_ref?: DebugRef
+  assertion?: string
+  red?: import('../verify/execution.js').ExecutionReceipt
+  green?: import('../verify/execution.js').ExecutionReceipt
 }
 
 export interface PlanTraceRef {

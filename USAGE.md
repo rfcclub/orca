@@ -6,8 +6,12 @@ For investigation, decision and migration outcomes, see
 [Outcome workflows](./docs/outcome-workflows.md). Use
 `orca check-outcomes <change> [--local-review | --online]` to check scoped receipts and authenticate
 human review. Findings, decision acceptance, tested code and live migration have
-separate completion boundaries. The current legacy verify command is a YAML
-coverage calculation; retain actual test execution evidence separately.
+separate completion boundaries. Executable verify runs the local Vitest runner;
+the explicit `--coverage-only` mode remains historical bookkeeping.
+
+For approved plans executed through Pilotfish with bounded attempts, local ready
+polling and durable resume, see [Bounded execution loop](./docs/loop-evidence.md).
+Configure the model driver explicitly; ordinary file workflows require no GitHub account.
 
 > Current as of v1.6.1. For the harness/debug-pipeline side (install
 > across all four packages, seal-gate/pilotfish/hammerhead-debug
@@ -207,11 +211,17 @@ orca show user-auth          # view details of one change
 
 ### orca verify [name]
 
-Runs the coverage gate — checks whether every SHALL/MUST scenario has a test:
+Executes every mapped SHALL/MUST Scenario or Property with local Vitest.
+Property execution uses the seeded fast-check helper and actual run/discard/category
+receipts; see [Property evidence](docs/property-evidence.md).
+The receipt binds assertion, source, test, runner and reporter hashes; YAML
+`status` is never test proof:
 
 ```bash
 orca verify                    # verify all changes
 orca verify user-auth          # verify one change
+orca verify user-auth --coverage-only  # legacy bookkeeping; non-executable
+orca verify user-auth --base <commit>  # fail at base, pass at current source
 ```
 
 Output: `.orca-verify.json` in the change directory.
@@ -291,8 +301,8 @@ Weak-model task list, nested inside `phase.json`'s apply phase — the mechanica
 ```bash
 orca plan-json init user-auth --trace INTENT-ID --resolved-by <name>
 orca plan-json add user-auth --id TASK-1 --behavior "..." --acceptance "..." --files a.ts,b.ts --test tests/a.test.ts [--consumes ...]
-orca plan-json start user-auth TASK-1 [--skip-state-check]
-orca plan-json complete user-auth TASK-1 --test-cmd "npx vitest run tests/a.test.ts" [--debug-session ... --debug-cycle ... --root-cause ...] [--escalated]
+orca plan-json start user-auth TASK-1 [--skip-state-check]  # executes task.test and records RED
+orca plan-json complete user-auth TASK-1 [--debug-session ... --debug-cycle ... --root-cause ...] [--escalated]
 orca plan-json finish user-auth   # closes the "apply" phase once every task is complete
 orca plan-json show user-auth     # no options
 ```
@@ -543,7 +553,7 @@ rules:
   proposal:
     - Include motivation and non-goals
   specs:
-    - Every requirement needs ≥1 scenario
+    - Every requirement needs ≥1 Scenario or Property
     - Scenarios use WHEN/THEN format
   design:
     - Include test strategy section

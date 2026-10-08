@@ -101,6 +101,19 @@ The system SHALL authenticate users with 2FA support.
 });
 
 describe('Version Bump', () => {
+  it('keeps beta archive versions valid and advances their prerelease counter', async () => {
+    const fs = await import('fs');
+    const { tmpdir } = await import('os');
+    const { join } = await import('path');
+    const dir = fs.mkdtempSync(join(tmpdir(), 'orca-beta-version-'));
+    try {
+      const file = join(dir, 'package.json');
+      fs.writeFileSync(file, JSON.stringify({ version: '1.6.2-beta.2' }));
+      expect(bumpVersion(file)).toBe('1.6.2-beta.3');
+      expect(JSON.parse(fs.readFileSync(file, 'utf8')).version).toBe('1.6.2-beta.3');
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+  });
+
   it('increments patch version', async () => {
     const fs = await import('fs');
     fs.writeFileSync('/tmp/orca-test-pkg.json', JSON.stringify({ version: '1.0.0' }), 'utf-8');

@@ -80,7 +80,10 @@ artifacts:
       - Use SHALL/MUST for normative requirements (avoid should/may)
       - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
       - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
-      - Every requirement MUST have at least one scenario.
+      - Every requirement MUST have at least one Scenario or Property.
+      - Property uses `#### Property: <name>`, FOR ALL/AND, THEN and positive integer RUNS.
+      - Property DISCARDS and COVERAGE thresholds are declared per property; executable verify requires actual seeded fast-check helper receipts.
+      - Scenario/Property IDs share the requirement-title + block-title slug convention.
 
       MODIFIED requirements workflow:
       1. Locate the existing requirement in openspec/specs/<capability>/spec.md

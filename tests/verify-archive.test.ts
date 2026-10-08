@@ -61,9 +61,10 @@ describe('Verify', () => {
     }
   });
 
-  it('verifies OpenSpec multi-capability changes instead of skipping them', () => {
+  it('rejects forged passing status in multi-capability changes without executed tests', () => {
     const root = mkdtempSync(join(tmpdir(), 'orca-project-'));
     const originalCwd = process.cwd();
+    const originalExitCode = process.exitCode;
 
     try {
       const changeDir = join(root, 'openspec', 'changes', 'colony-mesh');
@@ -109,11 +110,10 @@ The system MUST treat sockets as wake signals.
 
       const result = JSON.parse(readFileSync(join(changeDir, '.orca-verify.json'), 'utf-8'));
       expect(result.total_scenarios).toBe(2);
-      expect(result.passing).toBe(2);
-      expect(result.coverage).toBe(1);
-      expect(result.passed).toBe(true);
+      expect(result.passed).toBe(false);
     } finally {
       process.chdir(originalCwd);
+      process.exitCode = originalExitCode;
       rmSync(root, { recursive: true, force: true });
     }
   });
