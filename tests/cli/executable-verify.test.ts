@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from 'vitest';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, existsSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -230,3 +230,31 @@ it('[value-correct]', () => expect(1).toBe(1));`);
     const archived = spawnSync(process.execPath, [cli, 'archive', 'value-fix'], { cwd: root, encoding: 'utf8' });
     expect(archived.status, archived.stdout + archived.stderr).not.toBe(0);
   }, 30000);
+
+it('draft-bulk-verification-draft-remains-pending: bulk skips an explicit unapproved intent-only draft without GREEN', () => {
+  const root = mkdtempSync(join(tmpdir(), 'orca-draft-only-')); roots.push(root);
+  const change = join(root, 'openspec/changes/draft'); mkdirSync(change, { recursive: true });
+  writeFileSync(join(change, 'intent.md'), '# Intent\nStatus: DRAFT\nNot approved; not started.\n');
+  const run = spawnSync(process.execPath, [cli, 'verify'], { cwd: root, encoding: 'utf8' });
+  expect(run.status, run.stdout + run.stderr).toBe(0);
+  expect(run.stdout).toContain('SKIP draft: unapproved intent-only draft');
+  expect(existsSync(join(change, '.orca-verify.json'))).toBe(false);
+});
+
+it('draft-bulk-verification-named-draft-fails: naming a draft without a spec fails closed', () => {
+  const root = mkdtempSync(join(tmpdir(), 'orca-named-draft-')); roots.push(root);
+  const change = join(root, 'openspec/changes/draft'); mkdirSync(change, { recursive: true });
+  writeFileSync(join(change, 'intent.md'), '# Intent\nStatus: DRAFT\n');
+  const run = spawnSync(process.execPath, [cli, 'verify', 'draft'], { cwd: root, encoding: 'utf8' });
+  expect(run.status).toBe(1);
+  expect(JSON.parse(readFileSync(join(change, '.orca-verify.json'), 'utf8')).passed).toBe(false);
+});
+
+it('draft-bulk-verification-approved-missing-spec-fails: bulk does not skip approved missing specs', () => {
+  const root = mkdtempSync(join(tmpdir(), 'orca-approved-draft-')); roots.push(root);
+  const change = join(root, 'openspec/changes/draft'); mkdirSync(change, { recursive: true });
+  writeFileSync(join(change, 'intent.md'), '# Intent\nStatus: DRAFT\n## Intent Approval\nStatus: APPROVED\n');
+  const run = spawnSync(process.execPath, [cli, 'verify'], { cwd: root, encoding: 'utf8' });
+  expect(run.status).toBe(1);
+  expect(JSON.parse(readFileSync(join(change, '.orca-verify.json'), 'utf8')).passed).toBe(false);
+});

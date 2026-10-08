@@ -77,3 +77,13 @@ These receipts establish finite test execution against bound inputs, assuming
 the local test runner and runtime are trusted. They do not authenticate a
 compromised runtime or establish that a test's asserted requirement is correct.
 Property execution metadata and mutation policy are separate approved work.
+
+## Repository migration and pending drafts
+
+Legacy traceability can select an existing test using its exact Vitest `fullName` in `assertion`. The verifier still executes the file and requires exactly one unique executed assertion per required ID; YAML passing status is not proof.
+
+Bulk `orca verify` reports explicit unapproved intent-only DRAFT folders as SKIP (pending, not verified), without writing a GREEN receipt. A named change without a spec, an approved missing spec, or a change with design/plan artifacts still fails closed. Draft inventory does not constitute acceptance.
+
+Acceptance receipts pin the actual runner path, bytes and Node version. Moving a receipt to another machine or Node version requires fresh execution there. `plan-json complete --test-cmd` is no longer supported: task contracts select the actual runner and assertions.
+
+Declared produced paths must exist as regular in-project files at completion. A task deleting a declared produced path fails closed; deletion is not certified by recording a null hash.

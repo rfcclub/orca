@@ -36,6 +36,8 @@ const stateSchema = z.object({
   status: z.enum(['running', 'complete', 'stopped']), reason: z.string().optional(), next_command: z.string().optional(),
 });
 
+const quote = (value: string): string => "'" + value.replaceAll("'", "'\\''") + "'";
+
 function planContract(dir: string): string {
   const p = readPlanJson(dir);
   return hashBytes(JSON.stringify({ change_id: p.change_id, traces_to: p.traces_to, escalation: p.escalation,
@@ -145,7 +147,7 @@ export async function runLoop(opts: LoopOptions, deps: LoopDeps): Promise<LoopRe
         while (state.stages[task.id] === 'apply') {
           check();
           if ((state.attempts[task.id] ?? 0) >= limit) return stop('Attempt budget exhausted',
-            `hammerhead-debug open --symptom "${task.id}: test still failing" --repro "orca verify ${opts.name}" --dir "${dir}"`);
+            `hammerhead-debug open --symptom ${quote(task.id + ': test still failing')} --repro ${quote('orca verify ' + quote(opts.name))} --dir ${quote(dir)}`);
           if (state.tokens_reserved + budget.maxTokensPerAttempt > budget.tokenBudget) return stop('Token reservation budget exhausted');
           state.attempts[task.id] = (state.attempts[task.id] ?? 0) + 1;
           state.tokens_reserved += budget.maxTokensPerAttempt; save(); event('attempt', { task: task.id, attempt: state.attempts[task.id] });

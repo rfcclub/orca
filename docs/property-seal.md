@@ -26,3 +26,5 @@ release work. The operator's normal file workflow requires no GitHub account.
 
 The callback is trusted application code, not an OS sandbox. Finite seeded samples
 and mutation kills provide executable evidence, not a correctness proof or alpha.
+
+With mandatory Properties, the code gate uses its trusted Property bridge and ignores an injected `sealReviewFn`; a custom review hook cannot bypass mandatory mutation enforcement. Ordinary Scenario-only review retains the hook behavior.
