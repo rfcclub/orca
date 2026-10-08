@@ -1,9 +1,16 @@
 {
   "name": "@gotako/orca",
-  "version": "1.6.2-beta.3",
+  "version": "1.6.2-beta.11",
   "description": "Intent-guided spec-driven design framework with TDD superpowers — Intent → Spec → TDD → Trust",
   "type": "module",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./property": "./dist/property/runtime.js",
+    "./property/probe": "./dist/property/mutation.js",
+    "./*": "./*"
+  },
   "bin": {
     "orca": "dist/cli/index.js"
   },
@@ -14,8 +21,20 @@
     "USAGE.md",
     "docs/outcome-workflows.md",
     "docs/executable-evidence.md",
+    "docs/property-evidence.md",
+    "docs/loop-evidence.md",
+    "examples/trading",
     "skills/verify",
-    "skills/tdd"
+    "skills/tdd",
+    "skills/spec",
+    "vendor/seal-gate-0.5.2.tgz",
+    "vendor/seal-gate-0.5.2.sha256",
+    "docs/property-seal.md",
+    "vendor/gotako-pilotfish-0.2.0-beta.6.tgz",
+    "vendor/gotako-pilotfish-0.2.0-beta.6.sha256",
+    "vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz",
+    "vendor/gotako-hammerhead-debug-0.5.0-beta.2.sha256",
+    "docs/local-family-runtime.md"
   ],
   "scripts": {
     "build": "tsc",
@@ -25,7 +44,8 @@
   "devDependencies": {
     "@types/node": "^25.6.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "@gotako/orca": "link:."
   },
   "publishConfig": {
     "access": "public"
@@ -33,9 +53,16 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@gotako/hammerhead-debug": "0.5.0-beta.0",
-    "seal-gate": "0.5.0",
+    "@gotako/hammerhead-debug": "file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz",
+    "fast-check": "4.10.2",
+    "seal-gate": "file:vendor/seal-gate-0.5.2.tgz",
     "yaml": "^2.8.3",
-    "zod": "^4.3.6"
-  }
+    "zod": "^4.3.6",
+    "@gotako/pilotfish": "file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz"
+  },
+  "bundledDependencies": [
+    "seal-gate",
+    "@gotako/pilotfish",
+    "@gotako/hammerhead-debug"
+  ]
 }

@@ -9,6 +9,10 @@ human review. Findings, decision acceptance, tested code and live migration have
 separate completion boundaries. Executable verify runs the local Vitest runner;
 the explicit `--coverage-only` mode remains historical bookkeeping.
 
+For approved plans executed through Pilotfish with bounded attempts, local ready
+polling and durable resume, see [Bounded execution loop](./docs/loop-evidence.md).
+Configure the model driver explicitly; ordinary file workflows require no GitHub account.
+
 > Current as of v1.6.1. For the harness/debug-pipeline side (install
 > across all four packages, seal-gate/pilotfish/hammerhead-debug
 > integration, full walkthrough), see [HARNESS.md](./HARNESS.md).
@@ -207,7 +211,9 @@ orca show user-auth          # view details of one change
 
 ### orca verify [name]
 
-Executes every mapped SHALL/MUST scenario with local Vitest.
+Executes every mapped SHALL/MUST Scenario or Property with local Vitest.
+Property execution uses the seeded fast-check helper and actual run/discard/category
+receipts; see [Property evidence](docs/property-evidence.md).
 The receipt binds assertion, source, test, runner and reporter hashes; YAML
 `status` is never test proof:
 
@@ -547,7 +553,7 @@ rules:
   proposal:
     - Include motivation and non-goals
   specs:
-    - Every requirement needs ≥1 scenario
+    - Every requirement needs ≥1 Scenario or Property
     - Scenarios use WHEN/THEN format
   design:
     - Include test strategy section

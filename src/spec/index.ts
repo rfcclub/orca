@@ -1,5 +1,5 @@
 export { parseSpec } from './parser.js';
-export type { SpecTree, Requirement, Scenario } from './parser.js';
+export type { SpecTree, Requirement, Scenario, Property } from './parser.js';
 export { parseAssertion } from './assertion.js';
 export type { Assertion } from './assertion.js';
 export { validateSpec } from './validator.js';

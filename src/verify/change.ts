@@ -1,10 +1,13 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import { basename, dirname, join, relative } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
 import { findChangeSpecFiles } from '../cli/utils.js';
 import { parseSpec } from '../spec/parser.js';
+import { validateSpec } from '../spec/validator.js';
+import type { Property } from '../spec/parser.js';
+import { corpusPath } from '../property/corpus-path.js';
 import { findUnacceptedProposed } from '../issue/proposed.js';
 import { executeTests, hashBytes, selectedFile, sourceBinding, validateExecutionReceipt,
   type ExecutionReceipt, type TestSelection } from './execution.js';
@@ -13,6 +16,7 @@ import { replayTests } from './replay.js';
 const mappingSchema = z.object({
   scenario: z.string().min(1), test: z.string().min(1).optional(),
   assertion: z.string().min(1).optional(), status: z.string().optional(),
+  generators: z.array(z.string().min(1)).nonempty().optional(), corpus: z.string().min(1).optional(),
 });
 
 /** Derive requirements from current files rather than a cached assertion list. */
@@ -21,17 +25,25 @@ export function readTestContract(root: string, changeDir: string, name: string) 
   if (!specFiles.length) throw new Error('No spec.md found');
   const mandatory: string[] = [];
   const defaults: Record<string, string> = {};
+  const properties = new Map<string, Property>();
   const inputs: Record<string, string | null> = {};
   for (const specFile of specFiles) {
     const text = readFileSync(specFile, 'utf8');
     inputs[relative(root, specFile)] = hashBytes(text);
-    if (/^####\s+Property:/m.test(text)) throw new Error('Property execution is unsupported until the shared property adapter is installed');
+    const validation = validateSpec(text);
+    if (!validation.valid) throw new Error(`Invalid spec: ${validation.errors.join('; ')}`);
     for (const req of parseSpec(text).requirements) {
       if (req.strength !== 'SHALL' && req.strength !== 'MUST') continue;
       for (const sc of req.scenarios) {
         if (mandatory.includes(sc.id)) throw new Error(`Duplicate required scenario ID: ${sc.id}`);
         mandatory.push(sc.id);
         defaults[sc.id] = `tests/${name}/${basename(dirname(specFile))}/${sc.id}.test.ts`;
+      }
+      for (const property of req.properties ?? []) {
+        if (mandatory.includes(property.id)) throw new Error(`Duplicate required scenario/property ID: ${property.id}`);
+        mandatory.push(property.id);
+        properties.set(property.id, property);
+        defaults[property.id] = `tests/${name}/${basename(dirname(specFile))}/${property.id}.test.ts`;
       }
     }
   }
@@ -48,13 +60,25 @@ export function readTestContract(root: string, changeDir: string, name: string) 
       const entry = mappingSchema.parse(raw);
       if (!mandatory.includes(entry.scenario)) continue;
       if (mappings.has(entry.scenario)) throw new Error(`Duplicate mapping: ${entry.scenario}`);
-      mappings.set(entry.scenario, { id: entry.scenario, test: entry.test ?? defaults[entry.scenario],
-        ...(entry.assertion ? { assertion: entry.assertion } : {}) });
+      const selected: TestSelection = { id: entry.scenario, test: entry.test ?? defaults[entry.scenario],
+        ...(entry.assertion ? { assertion: entry.assertion } : {}) };
+      const property = properties.get(entry.scenario);
+      if (property) {
+        if (!entry.generators) throw new Error(`Property needs generator source mappings: ${entry.scenario}`);
+        const corpus = entry.corpus ?? `orca/corpus/${entry.scenario}.json`;
+        corpusPath(root, corpus);
+        for (const generator of entry.generators) inputs[generator] = hashBytes(readFileSync(selectedFile(root, generator)));
+        inputs[corpus] = existsSync(resolve(root, corpus)) ? hashBytes(readFileSync(selectedFile(root, corpus))) : null;
+        selected.property = { runs: property.runs!, maxDiscardRatio: property.maxDiscardRatio ?? 0,
+          coverage: property.coverage, generators: [...new Set(entry.generators)], corpus };
+      }
+      mappings.set(entry.scenario, selected);
       if (entry.status === 'passing') bookkeepingPassing.push(entry.scenario);
     }
   }
   const intent = join(changeDir, 'intent.md');
   inputs[relative(root, intent)] = existsSync(intent) ? hashBytes(readFileSync(intent)) : null;
+  for (const id of properties.keys()) if (!mappings.has(id)) throw new Error(`Property needs generator source mappings: ${id}`);
   return { mandatory, inputs, bookkeepingPassing,
     selection: mandatory.map(id => mappings.get(id) ?? { id, test: defaults[id] }) };
 }
