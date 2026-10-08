@@ -9,6 +9,9 @@ import { APPROVED_LABEL } from '../../src/issue/approve-flow.js';
 const ENH_BODY = ['Problem', 'Desired outcome', 'Non-goals', 'Constraints', 'Success criteria']
   .map(h => `## ${h}\n\ntext\n`).join('\n');
 
+const BUG_BODY = ['Repro steps', 'Expected', 'Actual', 'Environment']
+  .map(h => `### ${h}\n\ntext\n`).join('\n');
+
 let dir: string;
 let gh: FakeGitHub;
 let out: string[];
@@ -44,6 +47,16 @@ describe('cmdIssue', () => {
     gh.addIssue({ number: 12, author: 'a', labels: ['enhancement'], body: ENH_BODY });
     await expect(cmdIssue(['open', '12', '--name', 'my-change'], deps())).rejects.toThrow(/not approved/);
     expect(existsSync(join(dir, 'my-change'))).toBe(false);
+  });
+
+  it('open creates a bug change folder without an approval record', async () => {
+    gh.addIssue({ number: 7, author: 'a', labels: ['bug'], body: BUG_BODY });
+    await cmdIssue(['open', '7', '--name', 'fix-nan'], deps());
+    const intent = readFileSync(join(dir, 'fix-nan', 'intent.md'), 'utf-8');
+    expect(intent).toContain('Issue: GotakoVN/orca#7');
+    expect(intent).toContain('Status: NOT REQUIRED');
+    expect(intent).not.toContain('Approved by:');
+    expect(existsSync(join(dir, 'fix-nan', 'tasks.md'))).toBe(true);
   });
 
   it('open requires --name', async () => {
