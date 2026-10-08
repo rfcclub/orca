@@ -1,6 +1,6 @@
 # Local family runtime candidate
 
-Orca beta.9 bundles the reviewed Seal 0.5.2, Pilotfish 0.2.0-beta.5 and Hammerhead 0.5.0-beta.1 local tarballs and their SHA256 files. This dependency configuration update removes the old Pilotfish→LoomKit runtime chain. No runtime policy code changes. GitHub PRs are optional review delivery, not prerequisites to normal local file commands.
+Orca beta.10 bundles the reviewed Seal 0.5.2, Pilotfish 0.2.0-beta.6 and Hammerhead 0.5.0-beta.2 local tarballs and their SHA256 files. This dependency configuration update removes the old Pilotfish→LoomKit runtime chain. No runtime policy code changes. GitHub PRs are optional review delivery, not prerequisites to normal local file commands.
 
 Pilotfish imports Orca's public reader/types through a runtime-required peer; optional npm auto-install metadata prevents recursive package installation. The enclosing Orca package satisfies that peer. Seal retains mandatory Property hard blocking; Hammerhead remains a manual handoff. No provider commands/model identifiers or user loop config are changed.
 
@@ -13,3 +13,11 @@ Before replacing Orca beta.8, preserve the complete installed package tree and r
 Acceptance requires a completed build/full tests, a fresh offline package installed in isolation, no LoomKit package in its runtime tree, actual default loop task/gate/verify behavior, blocking Property cases and the bundled Hammerhead CLI checks. Historical gate verdicts remain scoped to their recorded precommit bindings.
 
 Review revisions: Seal now uses canonical description-only requirement strength with implicit SHALL. Pilotfish development tests accept an explicit local Orca tarball, execute the loop without environment-based skipping, and resolve the local peer. These corrections were reproduced with failing tests before implementation.
+
+## Reproducible source checkout
+
+Use `pnpm install --frozen-lockfile --ignore-scripts`, `pnpm build`, then `pnpm exec vitest run`. The development-only `@gotako/orca: link:.` dependency supplies Pilotfish's peer from this checkout; no global Orca installation or manually created link is required. Consumer tarball installations do not install development dependencies.
+
+The bundled SHA256 sidecars record packaging provenance. Package installation does not automatically enforce those sidecars; verify them explicitly when auditing an artifact. The package manager lockfile records the dependency tarball integrity used for reproducible installation.
+
+Pilotfish loads without its optional peer and reports local tarball installation guidance when execution requires Orca. Its installed-loop fixture resolves paths relative to the test module and was verified from an unrelated working directory. Missing-peer tests remain mandatory rather than being skipped.
