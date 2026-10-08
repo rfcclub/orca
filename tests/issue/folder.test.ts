@@ -54,6 +54,19 @@ describe('createChangeFromIssue', () => {
     expect(readdirSync(dir)).toEqual([]);
   });
 
+  it(`${sc(C, 'Bug issue needs no approval')}`, () => {
+    const out = createChangeFromIssue({
+      issue: { number: 7, author: 'a', labels: ['bug'], body: BUG_BODY },
+      repo: 'GotakoVN/orca', approved: false, changesDir: dir, name: 'fix-nan',
+      now: () => new Date('2026-10-07T12:00:00Z'),
+    });
+    expect(readdirSync(out.dir).sort()).toEqual(['intent.md', 'tasks.md']);
+    const intent = readFileSync(join(out.dir, 'intent.md'), 'utf-8');
+    expect(intent).toContain('Status: NOT REQUIRED (bug fix: the PR approval is the gate)');
+    expect(intent).not.toContain('Status: APPROVED');
+    expect(intent).not.toContain('Approved by:');
+  });
+
   it(`${sc(C, 'Spec traces to issue')}`, () => {
     const spec = '# thing Specification\n\n## Purpose\n\nwhy\n\n## Requirements\n\n### Requirement: A\n\nThe system SHALL do A.\n\n#### Scenario: s\n\n- **WHEN** x\n- **THEN** y\n';
     const stamped = stampSpecIssue(spec, 'GotakoVN/orca#12');
