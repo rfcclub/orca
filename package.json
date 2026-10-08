@@ -31,9 +31,9 @@
     "vendor/seal-gate-0.5.2.sha256",
     "docs/property-seal.md",
     "vendor/gotako-pilotfish-0.2.0-beta.6.tgz",
-    "vendor/gotako-pilotfish-0.2.0-beta.5.sha256",
+    "vendor/gotako-pilotfish-0.2.0-beta.6.sha256",
     "vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz",
-    "vendor/gotako-hammerhead-debug-0.5.0-beta.1.sha256",
+    "vendor/gotako-hammerhead-debug-0.5.0-beta.2.sha256",
     "docs/local-family-runtime.md"
   ],
   "scripts": {
