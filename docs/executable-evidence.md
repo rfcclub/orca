@@ -2,8 +2,41 @@
 
 Orca invokes the project's local Vitest runner directly. A local Git repository
 with a HEAD commit and a local Vitest installation are prerequisites. GitHub and
-network access are not required. The first adapter supports Vitest's JSON
-reporter and Vitest `expect` assertions; other runners are unsupported.
+network access are not required. Two runners are supported, chosen by
+`tdd.framework` in `openspec/config.yaml` (or `orca/config.yaml`): `vitest` (the
+default) and `bun`. Any other value is refused before a runner starts.
+
+## Bun
+
+```yaml
+tdd:
+  framework: bun
+```
+
+Orca runs the `bun` binary from `PATH` (or `ORCA_BUN`, an absolute path)
+directly, never through a shell. It binds the binary's path, sha256 and
+`bun --version`. Each selected file is passed as a `./`-prefixed path, because
+`bun test` treats a bare argument as a substring filter. The run uses
+`--reporter=junit` and an Orca preload.
+
+Bun's JUnit labels every failure `AssertionError` and carries no message, so a
+crash looks like a failed expectation there. The preload wraps the matchers of
+`expect(x)` and `expect(x).not` (which also covers `.resolves`) so that a failing
+expectation's message starts with a per-run nonce. Bun prints each failed test
+as a `(fail) <describe > … > name>` line after its error. A failure counts as
+assertion RED only when that block carries the nonce. A thrown `TypeError`, a
+rejected promise, a timeout or a file that fails to load stays inconclusive.
+A test that passes with zero `expect` calls is not GREEN. Exact `assertion`
+names use Bun's form, `outer > inner > [id] name`.
+
+The receipt's `report` is the JUnit text, Bun's stderr and the nonce, hashed
+like Vitest's report, and `runner.framework` is `bun`. `validateExecutionReceipt`
+derives the evidence again from that report. A test can read the nonce from the
+preload and forge it, just as a Vitest test can throw its own `AssertionError`;
+the guarantee is parity with Vitest, not more.
+
+Not supported on Bun yet: property receipts and `--base` replay. Both are
+refused with a reason and never fall back to Vitest.
 
 ## Assertion mapping
 

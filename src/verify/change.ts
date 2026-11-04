@@ -9,9 +9,10 @@ import { validateSpec } from '../spec/validator.js';
 import type { Property } from '../spec/parser.js';
 import { corpusPath } from '../property/corpus-path.js';
 import { findUnacceptedProposed } from '../issue/proposed.js';
-import { executeTests, hashBytes, selectedFile, sourceBinding, validateExecutionReceipt,
+import { executeTests, frameworkOf, hashBytes, selectedFile, sourceBinding, validateExecutionReceipt,
   type ExecutionReceipt, type TestSelection } from './execution.js';
 import { replayTests } from './replay.js';
+import { bunRunnerIdentity } from './bun.js';
 
 const mappingSchema = z.object({
   scenario: z.string().min(1), test: z.string().min(1).optional(),
@@ -107,11 +108,17 @@ export function checkChangeEvidence(root: string, changeDir: string, name: strin
         current.selection.some(s => execution.tests[s.test] !== hashBytes(readFileSync(selectedFile(root, s.test))))) {
       throw new Error('Executable verification receipt is stale or invalid');
     }
-    const packagePath = createRequire(join(root, 'package.json')).resolve('vitest/package.json');
-    const runner = realpathSync(join(dirname(packagePath), 'vitest.mjs'));
-    if (runner !== execution.runner.entry || hashBytes(readFileSync(runner)) !== execution.runner.sha256 ||
-        JSON.parse(readFileSync(packagePath, 'utf8')).version !== execution.runner.version ||
-        process.version !== execution.runner.node_version) throw new Error('Runner binding changed');
+    if (execution.runner.framework === 'bun') {
+      const bun = bunRunnerIdentity();
+      if (frameworkOf(root) !== 'bun' || bun.entry !== execution.runner.entry || bun.sha256 !== execution.runner.sha256 ||
+          bun.version !== execution.runner.version || process.version !== execution.runner.node_version) throw new Error('Runner binding changed');
+    } else {
+      const packagePath = createRequire(join(root, 'package.json')).resolve('vitest/package.json');
+      const runner = realpathSync(join(dirname(packagePath), 'vitest.mjs'));
+      if (runner !== execution.runner.entry || hashBytes(readFileSync(runner)) !== execution.runner.sha256 ||
+          JSON.parse(readFileSync(packagePath, 'utf8')).version !== execution.runner.version ||
+          process.version !== execution.runner.node_version) throw new Error('Runner binding changed');
+    }
     const intent = join(changeDir, 'intent.md');
     if (existsSync(intent) && findUnacceptedProposed(readFileSync(intent, 'utf8')).length) throw new Error('Unaccepted proposed intent criteria');
     if (receipt.replay && opts.execute !== false) {
