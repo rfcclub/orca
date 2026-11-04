@@ -44,3 +44,17 @@ it('output flooding is bounded and never an exit-zero success', async () => {
   expect(r.stdout.length).toBeLessThanOrEqual(10000);
   expect(r.exit_code).not.toBe(0);
 });
+
+it('[LOC-001] processIdentity is the same under any caller locale', async () => {
+  const { processIdentity } = await import('../../src/loop/process.js');
+  const saved = process.env.LC_ALL;
+  try {
+    process.env.LC_ALL = 'en_CA.UTF-8';
+    const regional = processIdentity(process.pid);
+    process.env.LC_ALL = 'C';
+    const c = processIdentity(process.pid);
+    expect(regional).toBe(c);
+  } finally {
+    if (saved === undefined) delete process.env.LC_ALL; else process.env.LC_ALL = saved;
+  }
+});
