@@ -97,15 +97,16 @@ describe('project lock across Orca versions', () => {
     } finally { owner.kill(); rmSync(root, { recursive: true, force: true }); }
   });
 
-  it('[LOC-004] replaces a new-format lock whose pid was reused', async () => {
-    const { acquireProjectLock } = await import('../../src/loop/process.js');
+  it('[LOC-005] writes a lock that an older Orca refuses', async () => {
+    const { acquireProjectLock, processIdentity } = await import('../../src/loop/process.js');
     const { root, lock } = lockRepo();
-    const owner = liveOwner();
+    const release = acquireProjectLock(root);
     try {
-      writeFileSync(lock, JSON.stringify({ pid: owner.pid, started: 'Thu Jan  1 00:00:00 1970', key: 'reused', identity_format: 'C/UTC' }));
-      const release = acquireProjectLock(root);
-      expect(JSON.parse(readFileSync(lock, 'utf8')).pid).toBe(process.pid);
-      release();
-    } finally { owner.kill(); rmSync(root, { recursive: true, force: true }); }
+      // Older Orca: `typeof previous.started !== 'string'` → 'Invalid project lock; operator recovery required'.
+      const written = JSON.parse(readFileSync(lock, 'utf8'));
+      expect(typeof written.started).not.toBe('string');
+      expect(written.started).toEqual({ 'C/UTC': processIdentity(process.pid) });
+    } finally { release(); rmSync(root, { recursive: true, force: true }); }
   });
+
 });
