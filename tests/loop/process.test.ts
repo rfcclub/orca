@@ -58,3 +58,17 @@ it('[LOC-001] processIdentity is the same under any caller locale', async () => 
     if (saved === undefined) delete process.env.LC_ALL; else process.env.LC_ALL = saved;
   }
 });
+
+it('[LOC-002] processIdentity is the same under any caller timezone', async () => {
+  const { processIdentity } = await import('../../src/loop/process.js');
+  const saved = process.env.TZ;
+  try {
+    process.env.TZ = 'America/Toronto';
+    const local = processIdentity(process.pid);
+    process.env.TZ = 'UTC';
+    const utc = processIdentity(process.pid);
+    expect(local).toBe(utc);
+  } finally {
+    if (saved === undefined) delete process.env.TZ; else process.env.TZ = saved;
+  }
+});

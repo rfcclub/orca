@@ -17,8 +17,9 @@ export function safePath(root: string, path: string): string {
 }
 
 export function processIdentity(pid: number): string {
-  // lstart is locale-formatted; the worker runs under LANG=C.UTF-8, so pin both sides to C.
-  return execFileSync('ps', ['-p', String(pid), '-o', 'lstart='], { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C' } }).trim();
+  // lstart is formatted by locale and printed in local time; the worker runs with LANG=C.UTF-8
+  // and no TZ, so pin both sides to C and UTC.
+  return execFileSync('ps', ['-p', String(pid), '-o', 'lstart='], { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C', TZ: 'UTC' } }).trim();
 }
 export function acquireProjectLock(root: string): () => void {
   const gitDir = execFileSync('git', ['rev-parse', '--absolute-git-dir'], { cwd: root, encoding: 'utf8' }).trim();
