@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const TddConfigSchema = z.object({
-  framework: z.enum(['vitest', 'jest', 'pytest', 'xunit', 'custom']).default('vitest'),
+  framework: z.enum(['vitest', 'bun', 'jest', 'pytest', 'xunit', 'custom']).default('vitest'),
   enforce: z.boolean().default(true),
   coverageThreshold: z.number().int().min(0).max(100).default(100),
   command: z.string().optional(),

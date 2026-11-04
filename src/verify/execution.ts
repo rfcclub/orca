@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { z } from 'zod';
 import { propertyEvidence, type PropertyContract } from '../property/evidence.js';
+import { loadConfig } from '../config/loader.js';
+import { bunEvidence, executeBunTests } from './bun.js';
 
 export interface TestSelection { id: string; test: string; assertion?: string; property?: PropertyContract }
 export interface SourceBinding { head: string; diff_sha256: string; tree_sha256: string }
@@ -14,7 +16,7 @@ export interface ExecutionReceipt {
   outcome: 'green' | 'red' | 'inconclusive';
   source: SourceBinding;
   tests: Record<string, string>;
-  runner: { entry: string; sha256: string; version: string; node_version: string };
+  runner: { entry: string; sha256: string; version: string; node_version: string; framework?: 'bun' };
   selection: TestSelection[];
   command: { executable: string; args: string[]; exit_code: number | null; stdout: string; stderr: string };
   report: string;
@@ -107,10 +109,21 @@ function reportEvidence(root: string, selection: TestSelection[], report: string
   return { assertions, reasons, outcome: reasons.length === 0 ? green ? 'green' : red ? 'red' : 'inconclusive' : 'inconclusive' };
 }
 
+/** The project's tdd.framework from openspec/config.yaml or orca/config.yaml; vitest when neither sets one. */
+export function frameworkOf(root: string): string {
+  for (const dir of ['openspec', 'orca']) {
+    const path = join(root, dir, 'config.yaml');
+    if (existsSync(path)) return loadConfig(readFileSync(path, 'utf8')).tdd?.framework ?? 'vitest';
+  }
+  return 'vitest';
+}
+
 export function validateExecutionReceipt(root: string, receipt: ExecutionReceipt): boolean {
   try {
     if (receipt.version !== 1 || receipt.report_sha256 !== hashBytes(receipt.report) || receipt.reasons.length) return false;
-    const evidence = reportEvidence(root, receipt.selection, receipt.report, receipt.command.exit_code);
+    const bun = receipt.runner.framework === 'bun';
+    if (bun && receipt.selection.some(s => s.property)) return false;
+    const evidence = (bun ? bunEvidence : reportEvidence)(root, receipt.selection, receipt.report, receipt.command.exit_code);
     if (receipt.selection.some(s => s.property) &&
         (receipt.property_report_sha256 !== hashBytes(receipt.property_report ?? '') ||
          propertyEvidence(root, receipt.selection, receipt.property_report ?? '', receipt.property_invocation, receipt.outcome).length)) return false;
@@ -124,6 +137,9 @@ export function executeTests(root: string, selection: TestSelection[]): Executio
   if (selection.length === 0 || new Set(selection.map(s => s.id)).size !== selection.length) {
     throw new Error('Execution needs unique required assertion IDs');
   }
+  const framework = frameworkOf(root);
+  if (framework === 'bun') return executeBunTests(root, selection);
+  if (framework !== 'vitest') throw new Error(`unsupported tdd.framework '${framework}': executable evidence runs vitest or bun`);
   const tests = Object.fromEntries(selection.map(s => [s.test, hashBytes(readFileSync(selectedFile(root, s.test)))]));
   const packagePath = createRequire(join(resolve(root), 'package.json')).resolve('vitest/package.json');
   const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));

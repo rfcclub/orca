@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { executeTests, hashBytes, selectedFile, sourceBinding, type ExecutionReceipt, type TestSelection } from './execution.js';
+import { executeTests, frameworkOf, hashBytes, selectedFile, sourceBinding, type ExecutionReceipt, type TestSelection } from './execution.js';
 import { corpusPath } from '../property/corpus-path.js';
 
 export interface ReplayReceipt {
@@ -34,6 +34,8 @@ function overlayFile(checkout: string, path: string, bytes: Buffer): void {
 /** Base is isolated; the actual caller tree (including dirty source) is executed directly. */
 export function replayTests(root: string, base: string, selection: TestSelection[], harnessPaths: string[] = []): ReplayReceipt {
   root = realpathSync(root);
+  // A base commit without the head's Bun config would silently run Vitest; Bun replay is a later change.
+  if (frameworkOf(root) === 'bun') throw new Error('--base replay is not supported for tdd.framework bun');
   const git = (args: string[]) => execFileSync('git', ['-c', 'core.hooksPath=/dev/null', ...args],
     { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   const revision = git(['rev-parse', '--verify', '--end-of-options', `${base}^{commit}`]).trim();
