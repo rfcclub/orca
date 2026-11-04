@@ -82,6 +82,19 @@ describe.skipIf(!hasBun)('bun runner', () => {
     expect(receipt.command.exit_code).toBe(0);
   }, 30000);
 
+  it('[BUN-001] reads the JUnit <properties> Bun writes under GitHub Actions', async () => {
+    const root = project({ [value]: bunTest(`test('[value-correct] v', () => expect(value).toBe(1));`) });
+    const ci = { GITHUB_ACTIONS: 'true', GITHUB_SERVER_URL: 'https://github.com', GITHUB_REPOSITORY: 'x/y', GITHUB_RUN_ID: '1', GITHUB_SHA: 'abc' };
+    const saved = Object.fromEntries(Object.keys(ci).map(k => [k, process.env[k]]));
+    Object.assign(process.env, ci);
+    try {
+      const receipt = await run(root, [{ id: 'value-correct', test: value }]);
+      expect(receipt.outcome, JSON.stringify(receipt.reasons)).toBe('green');
+    } finally {
+      for (const [k, v] of Object.entries(saved)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+    }
+  }, 30000);
+
   it('[BUN-001] runs only the selected file, not every path containing its name', async () => {
     const root = project({
       [value]: bunTest(`test('[value-correct] v', () => expect(value).toBe(1));`),

@@ -47,7 +47,9 @@ wrap(Object.getPrototypeOf(probe.not));
 `;
 
 interface XmlNode { name: string; attrs: Record<string, string>; children: XmlNode[] }
-const ELEMENTS = new Set(['testsuites', 'testsuite', 'testcase', 'failure', 'skipped', 'error']);
+// Bun writes <properties> (CI url, commit) inside a testsuite when it detects CI; nothing reads them.
+const ELEMENTS = new Set(['testsuites', 'testsuite', 'testcase', 'failure', 'skipped', 'error', 'properties', 'property']);
+const PARENTS: Record<string, string> = { properties: 'testsuite', property: 'properties' };
 
 const decode = (text: string) => text.replace(/&(#\d+|#x[0-9a-f]+|amp|lt|gt|quot|apos);/gi, (_, e: string) =>
   e[0] === '#' ? String.fromCodePoint(e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10))
@@ -73,6 +75,7 @@ function parseJunit(xml: string): XmlNode {
       stack.pop();
       continue;
     }
+    if (PARENTS[name] && stack[stack.length - 1].name !== PARENTS[name]) throw new Error(`misplaced JUnit <${name}>`);
     const attrs: Record<string, string> = {};
     for (const a of attrText.matchAll(/([\w:-]+)="([^"]*)"/g)) attrs[a[1]] = decode(a[2]);
     const node: XmlNode = { name, attrs, children: [] };
