@@ -208,7 +208,8 @@ export function executeBunTests(root: string, selection: TestSelection[]): Execu
   const started_at = new Date().toISOString();
   try {
     const run = spawnSync(entry, args, { cwd: root, encoding: 'utf8', timeout: 120000, maxBuffer: 16 * 1024 * 1024,
-      env: { ...process.env, CI: 'true' } });
+      // GITHUB_ACTIONS is dropped so Bun's console format does not depend on the host.
+      env: { ...process.env, CI: 'true', GITHUB_ACTIONS: undefined } });
     const report = JSON.stringify({ junit: existsSync(output) ? readFileSync(output, 'utf8') : '', stderr: run.stderr ?? '', mark });
     const reasons: string[] = [];
     if (run.error) reasons.push(`Runner failed: ${run.error.message}`);

@@ -6,7 +6,6 @@ import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { z } from 'zod';
 import { propertyEvidence, type PropertyContract } from '../property/evidence.js';
-import { loadConfig } from '../config/loader.js';
 import { bunEvidence, executeBunTests } from './bun.js';
 
 export interface TestSelection { id: string; test: string; assertion?: string; property?: PropertyContract }
@@ -109,11 +108,23 @@ function reportEvidence(root: string, selection: TestSelection[], report: string
   return { assertions, reasons, outcome: reasons.length === 0 ? green ? 'green' : red ? 'red' : 'inconclusive' : 'inconclusive' };
 }
 
-/** The project's tdd.framework from openspec/config.yaml or orca/config.yaml; vitest when neither sets one. */
+/**
+ * The project's tdd.framework from openspec/config.yaml or orca/config.yaml; vitest when neither sets one.
+ * Only that key is read, so placeholders or values elsewhere in the file cannot change how tests execute.
+ */
 export function frameworkOf(root: string): string {
   for (const dir of ['openspec', 'orca']) {
     const path = join(root, dir, 'config.yaml');
-    if (existsSync(path)) return loadConfig(readFileSync(path, 'utf8')).tdd?.framework ?? 'vitest';
+    if (!existsSync(path)) continue;
+    let section = '';
+    for (const line of readFileSync(path, 'utf8').split('\n')) {
+      const top = /^(\w+):\s*$/.exec(line.trimEnd());
+      if (top) { section = top[1]; continue; }
+      if (/^\S/.test(line)) { section = ''; continue; }
+      const key = /^\s+framework:\s*(\S+)\s*$/.exec(line);
+      if (section === 'tdd' && key) return key[1];
+    }
+    return 'vitest';
   }
   return 'vitest';
 }

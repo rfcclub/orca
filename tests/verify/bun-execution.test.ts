@@ -55,6 +55,18 @@ it('[value-correct] computes a value', () => expect(value).toBe(1));
     expect((receipt.runner as { framework?: string }).framework).toBeUndefined();
   }, 30000);
 
+  it('[BUN-002] reads only tdd.framework, so an unset placeholder elsewhere in config does not break Vitest', async () => {
+    const root = project({ [value]: `import {it, expect} from 'vitest';
+import {value} from '../source.js';
+it('[value-correct] computes a value', () => expect(value).toBe(1));
+` }, null);
+    mkdirSync(join(root, 'openspec'));
+    writeFileSync(join(root, 'openspec/config.yaml'), 'schema: spec-driven\ndrafting:\n  provider: ${ORCA_TEST_UNSET_PROVIDER}\n');
+    symlinkSync(modules, join(root, 'node_modules'), 'dir');
+    const receipt = await run(root, [{ id: 'value-correct', test: value }]);
+    expect(receipt.outcome, JSON.stringify(receipt.reasons)).toBe('green');
+  }, 30000);
+
   it.each(['jest', 'pytest', 'xunit', 'custom'])('[BUN-003] refuses tdd.framework %s before running anything', async framework => {
     const root = project({ [value]: bunTest(`test('[value-correct] v', () => expect(value).toBe(1));`) }, framework);
     await expect(run(root, [{ id: 'value-correct', test: value }])).rejects.toThrow(/unsupported/);
@@ -110,13 +122,18 @@ describe.skipIf(!hasBun)('bun runner', () => {
     const root = project({ [value]: bunTest(body) });
     const receipt = await run(root, [{ id: 'value-correct', test: value }]);
     expect(receipt.outcome, JSON.stringify(receipt.reasons)).toBe('inconclusive');
-    expect(receipt.reasons.length).toBeGreaterThan(0);
+    expect((receipt.runner as { framework?: string }).framework).toBe('bun');
+    expect(receipt.assertions[0]?.status).toBe('failed');
+    expect(receipt.assertions[0]?.failures.join('\n')).not.toMatch(/^AssertionError/);
+    expect(receipt.reasons.join('\n')).toContain('did not establish GREEN or assertion-failure RED');
   }, 30000);
 
   it('[BUN-007] leaves a test file that fails to load inconclusive', async () => {
     const root = project({ [value]: `import './missing.js';\n${bunTest(`test('[value-correct] v', () => expect(value).toBe(1));`)}` });
     const receipt = await run(root, [{ id: 'value-correct', test: value }]);
     expect(receipt.outcome, JSON.stringify(receipt.reasons)).toBe('inconclusive');
+    expect((receipt.runner as { framework?: string }).framework).toBe('bun');
+    expect(receipt.reasons.join('\n')).toMatch(/Expected exactly one executed assertion|unhandled error|Missing or invalid Bun report/);
   }, 30000);
 
   it.each([
@@ -128,6 +145,8 @@ describe.skipIf(!hasBun)('bun runner', () => {
     const root = project({ [value]: bunTest(body) });
     const receipt = await run(root, [{ id: 'value-correct', test: value }]);
     expect(receipt.outcome, JSON.stringify(receipt.reasons)).toBe('inconclusive');
+    expect((receipt.runner as { framework?: string }).framework).toBe('bun');
+    expect(receipt.reasons.join('\n')).toMatch(/Expected exactly one executed assertion|did not establish GREEN/);
   }, 30000);
 
   it('[BUN-009] does not accept a passing test that ran no expect', async () => {
@@ -184,6 +203,8 @@ test('[value-correct] v', () => { expect(1).toBe(1); writeFileSync('source.js', 
 ` });
     const receipt = await run(root, [{ id: 'value-correct', test: value }]);
     expect(receipt.outcome, JSON.stringify(receipt.reasons)).toBe('inconclusive');
+    expect((receipt.runner as { framework?: string }).framework).toBe('bun');
+    expect(receipt.reasons.join('\n')).toContain('Execution inputs changed');
   }, 30000);
 
   it('[BUN-015] refuses a property selection on Bun', async () => {
