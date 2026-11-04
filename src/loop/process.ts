@@ -21,10 +21,12 @@ export function processIdentity(pid: number): string {
   // and no TZ, so pin both sides to C and UTC.
   return execFileSync('ps', ['-p', String(pid), '-o', 'lstart='], { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C', TZ: 'UTC' } }).trim();
 }
+/** Marks locks whose `started` comes from processIdentity's C/UTC form. */
+const IDENTITY_FORMAT = 'C/UTC';
 export function acquireProjectLock(root: string): () => void {
   const gitDir = execFileSync('git', ['rev-parse', '--absolute-git-dir'], { cwd: root, encoding: 'utf8' }).trim();
   const path = safePath(gitDir, join(gitDir, 'orca-loop.lock'));
-  const owner = { pid: process.pid, started: processIdentity(process.pid), key: randomUUID() };
+  const owner = { pid: process.pid, started: processIdentity(process.pid), key: randomUUID(), identity_format: IDENTITY_FORMAT };
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const fd = openSync(path, 'wx', 0o600);
@@ -43,6 +45,11 @@ export function acquireProjectLock(root: string): () => void {
         if ((e as NodeJS.ErrnoException).code === 'ESRCH') live = false; else throw e;
       }
       if (live && processIdentity(previous.pid) === previous.started) throw new Error('Project loop already running: live lock owner');
+      // An older Orca wrote `started` in its own locale and timezone, which cannot be recomputed:
+      // a live owner of such a lock may still be running, so never remove it.
+      if (live && previous.identity_format !== IDENTITY_FORMAT) {
+        throw new Error('Project lock from an older Orca has a live owner; operator recovery required');
+      }
       unlinkSync(path);
     }
   }

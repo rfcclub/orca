@@ -1,5 +1,6 @@
-import { it, expect } from 'vitest';
-import { mkdtempSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { describe, it, expect } from 'vitest';
+import { execFileSync, spawn } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -71,4 +72,40 @@ it('[LOC-002] processIdentity is the same under any caller timezone', async () =
   } finally {
     if (saved === undefined) delete process.env.TZ; else process.env.TZ = saved;
   }
+});
+
+describe('project lock across Orca versions', () => {
+  const lockRepo = () => {
+    const root = mkdtempSync(join(tmpdir(), 'orca-lock-'));
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    return { root, lock: join(root, '.git', 'orca-loop.lock') };
+  };
+  const liveOwner = () => spawn('sleep', ['30'], { stdio: 'ignore' });
+
+  it('[LOC-003] keeps a live lock written by an older Orca', async () => {
+    const { acquireProjectLock } = await import('../../src/loop/process.js');
+    const { root, lock } = lockRepo();
+    const owner = liveOwner();
+    try {
+      // An older Orca stored lstart in its own locale and timezone, with no identity_format.
+      const legacy = JSON.stringify({ pid: owner.pid, started: 'Wed  4 Nov 21:32:50 2026', key: 'old-orca' });
+      writeFileSync(lock, legacy);
+      let error: Error | null = null;
+      try { acquireProjectLock(root)(); } catch (e) { error = e as Error; }
+      expect(String(error?.message)).toContain('operator recovery required');
+      expect(readFileSync(lock, 'utf8')).toBe(legacy);
+    } finally { owner.kill(); rmSync(root, { recursive: true, force: true }); }
+  });
+
+  it('[LOC-004] replaces a new-format lock whose pid was reused', async () => {
+    const { acquireProjectLock } = await import('../../src/loop/process.js');
+    const { root, lock } = lockRepo();
+    const owner = liveOwner();
+    try {
+      writeFileSync(lock, JSON.stringify({ pid: owner.pid, started: 'Thu Jan  1 00:00:00 1970', key: 'reused', identity_format: 'C/UTC' }));
+      const release = acquireProjectLock(root);
+      expect(JSON.parse(readFileSync(lock, 'utf8')).pid).toBe(process.pid);
+      release();
+    } finally { owner.kill(); rmSync(root, { recursive: true, force: true }); }
+  });
 });
