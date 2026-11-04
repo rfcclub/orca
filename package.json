@@ -2,6 +2,18 @@
   "name": "@gotako/orca",
   "version": "1.6.2-beta.11",
   "description": "Intent-guided spec-driven design framework with TDD superpowers — Intent → Spec → TDD → Trust",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rfcclub/orca.git"
+  },
+  "homepage": "https://github.com/rfcclub/orca#readme",
+  "bugs": {
+    "url": "https://github.com/rfcclub/orca/issues"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -51,7 +63,6 @@
     "access": "public"
   },
   "author": "",
-  "license": "MIT",
   "dependencies": {
     "@gotako/hammerhead-debug": "file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz",
     "fast-check": "4.10.2",
