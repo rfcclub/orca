@@ -17,12 +17,20 @@ export function safePath(root: string, path: string): string {
 }
 
 export function processIdentity(pid: number): string {
-  return execFileSync('ps', ['-p', String(pid), '-o', 'lstart='], { encoding: 'utf8' }).trim();
+  // lstart is formatted by locale and printed in local time; the worker runs with LANG=C.UTF-8
+  // and no TZ, so pin both sides to C and UTC.
+  return execFileSync('ps', ['-p', String(pid), '-o', 'lstart='], { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C', TZ: 'UTC' } }).trim();
 }
+/**
+ * Lock `started` is `{ 'C/UTC': processIdentity(pid) }`. Older Orca compared a string in its own
+ * locale and timezone and rejects a non-string `started` as 'Invalid project lock; operator
+ * recovery required' without removing it, so it cannot take over this version's live lock.
+ */
+const IDENTITY_FORMAT = 'C/UTC';
 export function acquireProjectLock(root: string): () => void {
   const gitDir = execFileSync('git', ['rev-parse', '--absolute-git-dir'], { cwd: root, encoding: 'utf8' }).trim();
   const path = safePath(gitDir, join(gitDir, 'orca-loop.lock'));
-  const owner = { pid: process.pid, started: processIdentity(process.pid), key: randomUUID() };
+  const owner = { pid: process.pid, started: { [IDENTITY_FORMAT]: processIdentity(process.pid) }, key: randomUUID() };
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const fd = openSync(path, 'wx', 0o600);
@@ -35,12 +43,17 @@ export function acquireProjectLock(root: string): () => void {
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
       const previous = JSON.parse(readFileSync(path, 'utf8'));
-      if (!Number.isSafeInteger(previous.pid) || previous.pid <= 0 || typeof previous.started !== 'string') throw new Error('Invalid project lock; operator recovery required');
+      const current = typeof previous.started === 'object' && previous.started !== null ? previous.started[IDENTITY_FORMAT] : undefined;
+      const legacy = typeof previous.started === 'string';
+      if (!Number.isSafeInteger(previous.pid) || previous.pid <= 0 || (!legacy && typeof current !== 'string')) throw new Error('Invalid project lock; operator recovery required');
       let live = true;
       try { process.kill(previous.pid, 0); } catch (e) {
         if ((e as NodeJS.ErrnoException).code === 'ESRCH') live = false; else throw e;
       }
-      if (live && processIdentity(previous.pid) === previous.started) throw new Error('Project loop already running: live lock owner');
+      if (live && processIdentity(previous.pid) === (legacy ? previous.started : current)) throw new Error('Project loop already running: live lock owner');
+      // An older Orca wrote `started` in its own locale and timezone, which cannot be recomputed:
+      // a live owner of such a lock may still be running, so never remove it.
+      if (live && legacy) throw new Error('Project lock from an older Orca has a live owner; operator recovery required');
       unlinkSync(path);
     }
   }

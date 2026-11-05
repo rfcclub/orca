@@ -1,5 +1,6 @@
-import { it, expect } from 'vitest';
-import { mkdtempSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { describe, it, expect } from 'vitest';
+import { execFileSync, spawn } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -43,4 +44,69 @@ it('output flooding is bounded and never an exit-zero success', async () => {
   expect(r.output_exceeded).toBe(true);
   expect(r.stdout.length).toBeLessThanOrEqual(10000);
   expect(r.exit_code).not.toBe(0);
+});
+
+it('[LOC-001] processIdentity is the same under any caller locale', async () => {
+  const { processIdentity } = await import('../../src/loop/process.js');
+  const saved = process.env.LC_ALL;
+  try {
+    process.env.LC_ALL = 'en_CA.UTF-8';
+    const regional = processIdentity(process.pid);
+    process.env.LC_ALL = 'C';
+    const c = processIdentity(process.pid);
+    expect(regional).toBe(c);
+  } finally {
+    if (saved === undefined) delete process.env.LC_ALL; else process.env.LC_ALL = saved;
+  }
+});
+
+it('[LOC-002] processIdentity is the same under any caller timezone', async () => {
+  const { processIdentity } = await import('../../src/loop/process.js');
+  const saved = process.env.TZ;
+  try {
+    process.env.TZ = 'America/Toronto';
+    const local = processIdentity(process.pid);
+    process.env.TZ = 'UTC';
+    const utc = processIdentity(process.pid);
+    expect(local).toBe(utc);
+  } finally {
+    if (saved === undefined) delete process.env.TZ; else process.env.TZ = saved;
+  }
+});
+
+describe('project lock across Orca versions', () => {
+  const lockRepo = () => {
+    const root = mkdtempSync(join(tmpdir(), 'orca-lock-'));
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    return { root, lock: join(root, '.git', 'orca-loop.lock') };
+  };
+  const liveOwner = () => spawn('sleep', ['30'], { stdio: 'ignore' });
+
+  it('[LOC-003] keeps a live lock written by an older Orca', async () => {
+    const { acquireProjectLock } = await import('../../src/loop/process.js');
+    const { root, lock } = lockRepo();
+    const owner = liveOwner();
+    try {
+      // An older Orca stored lstart in its own locale and timezone, with no identity_format.
+      const legacy = JSON.stringify({ pid: owner.pid, started: 'Wed  4 Nov 21:32:50 2026', key: 'old-orca' });
+      writeFileSync(lock, legacy);
+      let error: Error | null = null;
+      try { acquireProjectLock(root)(); } catch (e) { error = e as Error; }
+      expect(String(error?.message)).toContain('operator recovery required');
+      expect(readFileSync(lock, 'utf8')).toBe(legacy);
+    } finally { owner.kill(); rmSync(root, { recursive: true, force: true }); }
+  });
+
+  it('[LOC-005] writes a lock that an older Orca refuses', async () => {
+    const { acquireProjectLock, processIdentity } = await import('../../src/loop/process.js');
+    const { root, lock } = lockRepo();
+    const release = acquireProjectLock(root);
+    try {
+      // Older Orca: `typeof previous.started !== 'string'` → 'Invalid project lock; operator recovery required'.
+      const written = JSON.parse(readFileSync(lock, 'utf8'));
+      expect(typeof written.started).not.toBe('string');
+      expect(written.started).toEqual({ 'C/UTC': processIdentity(process.pid) });
+    } finally { release(); rmSync(root, { recursive: true, force: true }); }
+  });
+
 });
