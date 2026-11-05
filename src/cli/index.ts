@@ -25,6 +25,7 @@ import { cmdCheckOutcomes } from './commands/check-outcomes.js';
 import { cmdReviewOutcome } from './commands/review-outcome.js';
 import { cmdPropertyProbe } from './commands/property-probe.js';
 import { cmdLoop, cmdLoopWatch } from './commands/loop.js';
+import { readFileSync } from 'node:fs';
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
@@ -154,6 +155,12 @@ switch (command) {
   case '-h':
     printHelp();
     break;
+  case 'version':
+  case '--version':
+  case '-v':
+    // Orca's own package.json (package root from dist/cli/), not the working directory's.
+    console.log(JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version);
+    break;
   default:
     console.error(`Unknown command: ${command}`);
     printHelp();
@@ -231,6 +238,7 @@ Other:
   status                  Show current changes + coverage
   adapt <tool>            Show adapter instructions (claude-code | codex)
   help                    Show this help
+  version                 Print the installed Orca version (also --version, -v)
 `);
 }
 
