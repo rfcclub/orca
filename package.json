@@ -1,6 +1,6 @@
 {
   "name": "@gotako/orca",
-  "version": "1.6.2-beta.11",
+  "version": "1.6.2-beta.12",
   "description": "Intent-guided spec-driven design framework with TDD superpowers — Intent → Spec → TDD → Trust",
   "license": "MIT",
   "repository": {
