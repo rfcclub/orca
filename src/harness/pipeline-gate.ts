@@ -1,6 +1,6 @@
-import type { GateVerdict } from './types.js'
+import { normalizeGateVerdict, type GateVerdict } from './types.js'
 
-export type PipelineDecision = 'SHIP' | 'HOLD' | 'ESCALATE_TO_HUMAN'
+export type PipelineDecision = 'SHIP' | 'HOLD' | 'ESCALATE_TO_REVIEWER'
 
 export interface PipelineVerdictEntry {
   verdict: GateVerdict
@@ -18,7 +18,15 @@ export interface PipelineResult {
   warnings?: string[]
 }
 
-export function runPipelineGate(verdicts: PipelineVerdictEntry[]): PipelineResult {
+const KNOWN_VERDICTS: ReadonlySet<string> = new Set(['PASS', 'PASS_WITH_WARNINGS', 'REVISE', 'ESCALATE_TO_REVIEWER', 'BLOCK'])
+
+export function runPipelineGate(entries: PipelineVerdictEntry[]): PipelineResult {
+  // Callers outside gate-pipeline may still hand in the old escalation name.
+  const verdicts: PipelineVerdictEntry[] = entries.map(v => ({
+    ...v,
+    verdict: normalizeGateVerdict(v.verdict),
+    ...(v.plan ? { plan: { ...v.plan, verdict: normalizeGateVerdict(v.plan.verdict) } } : {}),
+  }))
   if (verdicts.length === 0) {
     return { decision: 'HOLD', summary: 'No changes gated — hold by default' }
   }
@@ -41,8 +49,20 @@ export function runPipelineGate(verdicts: PipelineVerdictEntry[]): PipelineResul
     }
   }
 
+  // After normalizing, a name that is still not a verdict (a typo of an escalation, say) must never ship.
+  const unrecognised = verdicts.filter(
+    v => !KNOWN_VERDICTS.has(v.verdict) || (v.plan?.verdict !== undefined && !KNOWN_VERDICTS.has(v.plan.verdict)),
+  )
+  if (unrecognised.length > 0) {
+    return {
+      decision: 'HOLD',
+      blocking: unrecognised.map(v => v.change ?? 'unknown'),
+      summary: `HOLD: ${unrecognised.length} change(s) have an unrecognised verdict`,
+    }
+  }
+
   const planBlocked = verdicts.filter(
-    v => v.plan?.verdict === 'BLOCK' || v.plan?.verdict === 'REVISE' || v.plan?.verdict === 'ESCALATE_TO_HUMAN',
+    v => v.plan?.verdict === 'BLOCK' || v.plan?.verdict === 'REVISE' || v.plan?.verdict === 'ESCALATE_TO_REVIEWER',
   )
   const planMissing = verdicts.filter(v => v.plan && !v.plan.verdict && v.plan.required)
   if (planBlocked.length > 0 || planMissing.length > 0) {
@@ -59,16 +79,16 @@ export function runPipelineGate(verdicts: PipelineVerdictEntry[]): PipelineResul
   const revises = verdicts.filter(v => v.verdict === 'REVISE')
   if (revises.length >= 3) {
     return {
-      decision: 'ESCALATE_TO_HUMAN',
-      summary: `ESCALATE: ${revises.length} changes require revision`,
+      decision: 'ESCALATE_TO_REVIEWER',
+      summary: `ESCALATE: ${revises.length} changes require revision — hand to an independent reviewer`,
     }
   }
 
-  const escalations = verdicts.filter(v => v.verdict === 'ESCALATE_TO_HUMAN')
+  const escalations = verdicts.filter(v => v.verdict === 'ESCALATE_TO_REVIEWER')
   if (escalations.length > 0) {
     return {
-      decision: 'ESCALATE_TO_HUMAN',
-      summary: `ESCALATE: ${escalations.length} change(s) require human review`,
+      decision: 'ESCALATE_TO_REVIEWER',
+      summary: `ESCALATE: ${escalations.length} change(s) need an independent reviewer`,
     }
   }
 

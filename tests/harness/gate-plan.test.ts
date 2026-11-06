@@ -174,7 +174,7 @@ describe('runGatePlan LLM wiring (SC-010, SC-011)', () => {
 })
 
 describe('runGatePlan verdict records (SC-012..SC-017)', () => {
-  for (const verdict of ['PASS', 'PASS_WITH_WARNINGS', 'BLOCK', 'REVISE', 'ESCALATE_TO_HUMAN']) {
+  for (const verdict of ['PASS', 'PASS_WITH_WARNINGS', 'BLOCK', 'REVISE', 'ESCALATE_TO_REVIEWER']) {
     it(`${verdict}: writes a plan verdict file and reports it`, async () => {
       write('intent.md', APPROVED_INTENT)
       write('tasks.md', '- [ ] do it')

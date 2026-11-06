@@ -8,7 +8,7 @@ import { TransitionGuard } from './transition-guard.js'
 import { reviewedCodeDiff } from './code-diff.js'
 import { parseSpec } from '../spec/parser.js'
 import { createPropertySealBridge } from './property-seal.js'
-import type { GateVerdict, VerdictEntry } from './types.js'
+import { normalizeGateVerdict, type GateVerdict, type VerdictEntry } from './types.js'
 import { executeTests, sourceBinding, validateExecutionReceipt } from '../verify/execution.js'
 
 export interface GateCodeResult {
@@ -151,7 +151,7 @@ export async function runGateCode(opts: {
   // Build verdict entry for phase.json
   const testRef = selfCheck.evidence.find(e => e.command?.includes('test'))
   const verdictEntry: VerdictEntry = {
-    verdict: sealResult.verdict,
+    verdict: normalizeGateVerdict(sealResult.verdict),
     bound_diff_sha256: diffSha256,
     evidence_bound: {
       test_log_sha256: testRef?.output ? sha256String(testRef.output) : null,
@@ -181,7 +181,7 @@ export async function runGateCode(opts: {
   }
 
   return {
-    verdict: resultWithProbe.result.verdict,
+    verdict: normalizeGateVerdict(resultWithProbe.result.verdict),
     trust_score: resultWithProbe.result.trust_score,
     bound_diff_sha256: diffSha256,
     blocking_issues: resultWithProbe.result.blocking_issues,

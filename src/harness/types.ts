@@ -4,7 +4,15 @@ export const LIFECYCLE = [
 ] as const
 
 export type Phase = typeof LIFECYCLE[number]
-export type GateVerdict = 'PASS' | 'PASS_WITH_WARNINGS' | 'REVISE' | 'ESCALATE_TO_HUMAN' | 'BLOCK'
+export type GateVerdict = 'PASS' | 'PASS_WITH_WARNINGS' | 'REVISE' | 'ESCALATE_TO_REVIEWER' | 'BLOCK'
+
+/** The verdict name older seal-gate builds and stored verdict files still use; input only. */
+const LEGACY_ESCALATION = 'ESCALATE_TO_HUMAN'
+
+/** Reads the old escalation name as the new one at every point a verdict enters orca; anything else is unchanged. */
+export function normalizeGateVerdict<T extends string | undefined>(value: T): T | 'ESCALATE_TO_REVIEWER' {
+  return value === LEGACY_ESCALATION ? 'ESCALATE_TO_REVIEWER' : value
+}
 
 export interface ArtifactRef {
   path?: string

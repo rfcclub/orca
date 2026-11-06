@@ -365,7 +365,7 @@ const verdict = await Seal.review({
   context: { agent_id: 'agent', agent_role: 'agent' },
 })
 
-verdict.verdict              // PASS | PASS_WITH_WARNINGS | REVISE | ESCALATE_TO_HUMAN | BLOCK
+verdict.verdict              // PASS | PASS_WITH_WARNINGS | REVISE | ESCALATE_TO_REVIEWER | BLOCK
 verdict.trust_score          // 0–100
 verdict.next_action          // human-readable instruction
 verdict.blocking_issues      // must-fix issues, if any
@@ -379,7 +379,7 @@ maps to):
 | `PASS` | ≥ 85 | `gate-code` exits 0 — proceed to `verify` |
 | `PASS_WITH_WARNINGS` | 70–84 | exits 0, prints advisory notes (e.g. `SPEC_UNTESTED`) |
 | `REVISE` | 50–69 | exits non-zero — `blocking_issues` names what to fix |
-| `ESCALATE_TO_HUMAN` | 30–49 | exits non-zero — halt, a human must review |
+| `ESCALATE_TO_REVIEWER` | 30–49 | hand the evidence to an independent reviewer before continuing |
 | `BLOCK` | < 30, or a hard rule (see below) | exits non-zero — do not proceed |
 
 A handful of hard rules `BLOCK`/`ESCALATE` regardless of trust score —

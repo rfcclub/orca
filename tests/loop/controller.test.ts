@@ -51,7 +51,7 @@ it('one bounded loop completes two tasks and verifies after each required gate',
   } finally { f.clean(); }
 });
 
-it.each(['BLOCK', 'REVISE', 'ESCALATE_TO_HUMAN'])('adverse %s gate stops before task two and resume retries only the unfinished gate', async verdict => {
+it.each(['BLOCK', 'REVISE', 'ESCALATE_TO_REVIEWER'])('adverse %s gate stops before task two and resume retries only the unfinished gate', async verdict => {
   const f = fixture();
   try {
     const api = await import(modulePath).catch(() => null);

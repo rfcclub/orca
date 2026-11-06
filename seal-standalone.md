@@ -58,7 +58,7 @@ CRITICAL = production destructive, user data, legal/financial/medical
 PASS                → proceed
 PASS_WITH_WARNINGS  → proceed; log warnings
 REVISE              → send blocking_issues back to producing agent
-ESCALATE_TO_HUMAN   → gate is uncertain; needs human decision
+ESCALATE_TO_REVIEWER   → gate is uncertain; hand the evidence to an independent reviewer
 BLOCK               → stop; risk too high or spec fundamentally broken
 ```
 
@@ -68,7 +68,7 @@ BLOCK               → stop; risk too high or spec fundamentally broken
 
 ```json
 {
-  "verdict": "PASS | PASS_WITH_WARNINGS | REVISE | ESCALATE_TO_HUMAN | BLOCK",
+  "verdict": "PASS | PASS_WITH_WARNINGS | REVISE | ESCALATE_TO_REVIEWER | BLOCK",
   "confidence": 0.0,
   "risk_level": "LOW | MEDIUM | HIGH | CRITICAL",
   "summary": "",
@@ -103,7 +103,7 @@ BLOCK               → stop; risk too high or spec fundamentally broken
 - Security, data loss, privacy, financial, legal, production risk → ESCALATE or BLOCK
 - Missing evidence for important claim → not PASS
 - Weak or superficial tests → not PASS
-- Uncertain AND risk >= MEDIUM → ESCALATE_TO_HUMAN
+- Uncertain AND risk >= MEDIUM → ESCALATE_TO_REVIEWER
 - Never invent evidence
 - Never assume success without proof
 - Do not reward fluent explanations. Reward verifiable correctness.
@@ -162,7 +162,7 @@ user privacy, and irreversible actions.
 
 Return only valid JSON using this schema:
 {
-  "verdict": "PASS | PASS_WITH_WARNINGS | REVISE | ESCALATE_TO_HUMAN | BLOCK",
+  "verdict": "PASS | PASS_WITH_WARNINGS | REVISE | ESCALATE_TO_REVIEWER | BLOCK",
   "confidence": 0.0,
   "risk_level": "LOW | MEDIUM | HIGH | CRITICAL",
   "summary": "",
@@ -185,7 +185,7 @@ Decision rules:
 - If output may cause security, data loss, privacy, financial, legal, or production risk → ESCALATE or BLOCK.
 - If evidence is missing for an important claim → not PASS.
 - If tests are weak or superficial → not PASS.
-- If uncertain and risk >= MEDIUM → ESCALATE_TO_HUMAN.
+- If uncertain and risk >= MEDIUM → ESCALATE_TO_REVIEWER.
 - Never invent evidence.
 - Never assume success without proof.
 ```

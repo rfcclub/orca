@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { sha256String } from './phase-json.js'
-import type { GateVerdict } from './types.js'
+import { normalizeGateVerdict, type GateVerdict } from './types.js'
 
 export class GatePlanError extends Error {}
 
@@ -109,7 +109,7 @@ export async function runGatePlan(opts: {
   }
 
   const result: GatePlanResult = {
-    verdict: sealResult.verdict,
+    verdict: normalizeGateVerdict(sealResult.verdict),
     trust_score: sealResult.trust_score,
     artifact,
     bound_artifact_sha256: sha256String(artifactText),
@@ -137,6 +137,7 @@ export function readLatestVerdicts(changeDir: string): LatestVerdicts {
   const latest: LatestVerdicts = {}
   for (const file of readdirSync(verdictDir).filter(f => f.endsWith('.json')).sort()) {
     const record = JSON.parse(readFileSync(join(verdictDir, file), 'utf-8'))
+    if (record.verdict !== undefined) record.verdict = normalizeGateVerdict(record.verdict)
     if (record.kind === 'plan') latest.plan = record
     else latest.code = record
   }

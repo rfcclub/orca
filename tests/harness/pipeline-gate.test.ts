@@ -32,7 +32,7 @@ describe('runPipelineGate', () => {
       { verdict: 'REVISE', change: 'b' },
       { verdict: 'REVISE', change: 'c' },
     ]
-    expect(runPipelineGate(verdicts).decision).toBe('ESCALATE_TO_HUMAN')
+    expect(runPipelineGate(verdicts).decision).toBe('ESCALATE_TO_REVIEWER')
   })
 
   it('SHIP with only 2 REVISE verdicts (not 3)', () => {
@@ -45,12 +45,12 @@ describe('runPipelineGate', () => {
     expect(runPipelineGate(verdicts).decision).toBe('SHIP')
   })
 
-  it('ESCALATE when any verdict is ESCALATE_TO_HUMAN', () => {
+  it('ESCALATE when any verdict is ESCALATE_TO_REVIEWER', () => {
     const verdicts: PipelineVerdictEntry[] = [
       { verdict: 'PASS', change: 'a' },
-      { verdict: 'ESCALATE_TO_HUMAN', change: 'b' },
+      { verdict: 'ESCALATE_TO_REVIEWER', change: 'b' },
     ]
-    expect(runPipelineGate(verdicts).decision).toBe('ESCALATE_TO_HUMAN')
+    expect(runPipelineGate(verdicts).decision).toBe('ESCALATE_TO_REVIEWER')
   })
 
   it('computes aggregate trust score', () => {
@@ -81,7 +81,7 @@ describe('runPipelineGate plan verdicts (gate-plan SC-018..SC-021)', () => {
   const code = (change: string, plan?: PipelineVerdictEntry['plan']): PipelineVerdictEntry =>
     ({ verdict: 'PASS', change, trust_score: 90, plan })
 
-  for (const verdict of ['BLOCK', 'REVISE', 'ESCALATE_TO_HUMAN'] as const) {
+  for (const verdict of ['BLOCK', 'REVISE', 'ESCALATE_TO_REVIEWER'] as const) {
     it(`SC-018: plan verdict ${verdict} holds the pipeline and names the change`, () => {
       const result = runPipelineGate([code('a', { verdict, required: true })])
       expect(result.decision).not.toBe('SHIP')
