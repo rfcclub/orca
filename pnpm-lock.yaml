@@ -18,8 +18,8 @@ importers:
         specifier: 4.10.2
         version: 4.10.2
       seal-gate:
-        specifier: file:vendor/seal-gate-0.5.2.tgz
-        version: file:vendor/seal-gate-0.5.2.tgz
+        specifier: file:vendor/seal-gate-0.6.0-beta.0.tgz
+        version: file:vendor/seal-gate-0.6.0-beta.0.tgz
       yaml:
         specifier: ^2.8.3
         version: 2.9.0
@@ -351,9 +351,9 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
-  seal-gate@file:vendor/seal-gate-0.5.2.tgz:
-    resolution: {integrity: sha512-WlmW4vqd5Nxa23iFi9pUNf1b5FeO290ephTzJjj9sKFB0zRrX9JE6BYNYZcwDvKjp4bAXnqak30lQnDp9UdGrQ==, tarball: file:vendor/seal-gate-0.5.2.tgz}
-    version: 0.5.2
+  seal-gate@file:vendor/seal-gate-0.6.0-beta.0.tgz:
+    resolution: {integrity: sha512-lKNbbG/NVEQhx7qqLr6WY3BG7kRW/wGg5L/+KPYU/1y5YkPhBiSdbQpwt15zaPiy+pGb7ersaZQm8X3YKEADUQ==, tarball: file:vendor/seal-gate-0.6.0-beta.0.tgz}
+    version: 0.6.0-beta.0
     engines: {node: '>=22.5.0'}
     hasBin: true
 
@@ -720,7 +720,7 @@ snapshots:
       '@rolldown/binding-win32-arm64-msvc': 1.2.3
       '@rolldown/binding-win32-x64-msvc': 1.2.3
 
-  seal-gate@file:vendor/seal-gate-0.5.2.tgz: {}
+  seal-gate@file:vendor/seal-gate-0.6.0-beta.0.tgz: {}
 
   siginfo@2.0.0: {}
 

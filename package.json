@@ -1,6 +1,6 @@
 {
   "name": "@gotako/orca",
-  "version": "1.6.2-beta.12",
+  "version": "1.7.0-beta.0",
   "description": "Intent-guided spec-driven design framework with TDD superpowers — Intent → Spec → TDD → Trust",
   "license": "MIT",
   "repository": {
@@ -39,8 +39,8 @@
     "skills/verify",
     "skills/tdd",
     "skills/spec",
-    "vendor/seal-gate-0.5.2.tgz",
-    "vendor/seal-gate-0.5.2.sha256",
+    "vendor/seal-gate-0.6.0-beta.0.tgz",
+    "vendor/seal-gate-0.6.0-beta.0.sha256",
     "docs/property-seal.md",
     "vendor/gotako-pilotfish-0.2.0-beta.6.tgz",
     "vendor/gotako-pilotfish-0.2.0-beta.6.sha256",
@@ -66,7 +66,7 @@
   "dependencies": {
     "@gotako/hammerhead-debug": "file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz",
     "fast-check": "4.10.2",
-    "seal-gate": "file:vendor/seal-gate-0.5.2.tgz",
+    "seal-gate": "file:vendor/seal-gate-0.6.0-beta.0.tgz",
     "yaml": "^2.8.3",
     "zod": "^4.3.6",
     "@gotako/pilotfish": "file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz"
