@@ -34,8 +34,6 @@ function overlayFile(checkout: string, path: string, bytes: Buffer): void {
 /** Base is isolated; the actual caller tree (including dirty source) is executed directly. */
 export function replayTests(root: string, base: string, selection: TestSelection[], harnessPaths: string[] = []): ReplayReceipt {
   root = realpathSync(root);
-  // A base commit without the head's Bun config would silently run Vitest; Bun replay is a later change.
-  if (frameworkOf(root) === 'bun') throw new Error('--base replay is not supported for tdd.framework bun');
   const git = (args: string[]) => execFileSync('git', ['-c', 'core.hooksPath=/dev/null', ...args],
     { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   const revision = git(['rev-parse', '--verify', '--end-of-options', `${base}^{commit}`]).trim();
@@ -69,6 +67,12 @@ export function replayTests(root: string, base: string, selection: TestSelection
     for (const test of [...tests, ...harness]) {
       overlayFile(checkout, test.path, test.bytes);
     }
+    // The base runs with the head's runner choice: a base commit without the head's
+    // tdd.framework config would otherwise run a Bun project's tests under Vitest.
+    for (const config of ['openspec/config.yaml', 'orca/config.yaml']) {
+      if (existsSync(join(root, config))) overlayFile(checkout, config, readFileSync(join(root, config)));
+      else rmSync(join(checkout, config), { force: true });
+    }
     for (const input of propertyInputs) {
       if (input.bytes) overlayFile(checkout, input.path, input.bytes);
       else {
@@ -80,6 +84,7 @@ export function replayTests(root: string, base: string, selection: TestSelection
     symlinkSync(dependency_root, join(checkout, 'node_modules'), 'dir');
     const baseline = executeTests(checkout, baseSelection);
     const reasons: string[] = [];
+    if (frameworkOf(checkout) !== frameworkOf(root)) reasons.push('Base/head test framework differs');
     if (head.outcome !== 'green') reasons.push('Current source did not establish GREEN');
     if (baseline.outcome !== 'red') reasons.push('Base did not establish assertion-failure RED; setup failure is inconclusive');
     if (selection.some((s, index) => baseline.tests[baseSelection[index].test] !== head.tests[s.test])) reasons.push('Base/head regression test bytes differ');

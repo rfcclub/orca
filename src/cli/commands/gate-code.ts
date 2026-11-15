@@ -1,4 +1,4 @@
-import { getChangeDir, changeExists } from '../utils.js'
+import { getChangeDir, changeExists, getProjectRoot } from '../utils.js'
 import { runGateCode } from '../../harness/gate-code.js'
 
 export async function cmdGateCode(name: string, opts: { skip?: boolean; llm?: string } = {}): Promise<void> {
@@ -11,11 +11,12 @@ export async function cmdGateCode(name: string, opts: { skip?: boolean; llm?: st
 
   console.log(`Running SEAL gate on "${name}"...`)
   try {
-    const result = await runGateCode({ changeDir, skipStateCheck: opts.skip, llmProvider: opts.llm })
+    const result = await runGateCode({ changeDir, projectRoot: getProjectRoot(), skipStateCheck: opts.skip, llmProvider: opts.llm })
     const icon = result.verdict === 'PASS' || result.verdict === 'PASS_WITH_WARNINGS' ? '✓' : '✗'
     console.log(`\n${icon}  Verdict: ${result.verdict}`)
     console.log(`  Trust score: ${result.trust_score}`)
     console.log(`  Diff SHA256: ${result.bound_diff_sha256.slice(0, 16)}...`)
+    console.log(`  Reviewed files (${result.reviewed_files.length}): ${result.reviewed_files.join(', ') || 'none'}`)
 
     if (result.advisory_notes?.length) {
       console.log('  Advisory notes:')

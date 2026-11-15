@@ -5,11 +5,13 @@ import { parseSelfCheck } from './self-check.js'
 import { readPhaseJson, recordGateVerdict, sha256String } from './phase-json.js'
 import { readPlanJson } from './plan-json.js'
 import { TransitionGuard } from './transition-guard.js'
-import { reviewedCodeDiff } from './code-diff.js'
+import { reviewedCodeDiff, reviewedCodeFiles } from './code-diff.js'
 import { parseSpec } from '../spec/parser.js'
 import { createPropertySealBridge } from './property-seal.js'
 import { normalizeGateVerdict, type GateVerdict, type VerdictEntry } from './types.js'
-import { executeTests, sourceBinding, validateExecutionReceipt } from '../verify/execution.js'
+import { executeTests, sourceBinding, validateExecutionReceipt, type ExecutionReceipt } from '../verify/execution.js'
+import { readTestContract } from '../verify/change.js'
+import { replayTests } from '../verify/replay.js'
 
 export interface GateCodeResult {
   verdict: GateVerdict
@@ -19,7 +21,34 @@ export interface GateCodeResult {
   next_action: string
   advisory_notes?: string[]
   llm_hint?: string
+  /** Files in the reviewed and bound diff (the whole working tree, not only this change). */
+  reviewed_files: string[]
 }
+
+interface AssertionRecord { test: string; name: string; status: string; test_sha256: string }
+
+/**
+ * Seal's evidence.regression, produced by running this change's mapped tests now: once
+ * against HEAD (the base the reviewed diff is taken from, with the current test files
+ * overlaid) and once against the current tree. It counts only when HEAD fails with an
+ * assertion error and the current tree passes. Receipt files are not read, so neither an
+ * earlier RED nor an edited one can stand in. Bun projects, a committed fix (HEAD already
+ * passes) or any error give undefined.
+ */
+export function regressionEvidence(root: string, changeDir: string): { red: AssertionRecord[]; green: AssertionRecord[] } | undefined {
+  try {
+    const { selection } = readTestContract(root, changeDir, basename(changeDir))
+    if (!selection.length) return undefined
+    const replay = replayTests(root, 'HEAD', selection)
+    if (!replay.passed) return undefined
+    const records = (run: ExecutionReceipt) => run.assertions.map(a =>
+      ({ test: a.test, name: a.name, status: a.status, test_sha256: run.tests[a.test] ?? '' }))
+    return { red: records(replay.base), green: records(replay.head) }
+  } catch {
+    return undefined
+  }
+}
+
 
 export async function runGateCode(opts: {
   changeDir: string
@@ -59,13 +88,10 @@ export async function runGateCode(opts: {
   const specContent = findSpecContent(opts.changeDir)
 
   // Capture current diff — binds this verdict to exact code state
-  let diffOutput = ''
-  try {
-    diffOutput = reviewedCodeDiff(opts.changeDir)
-  } catch {
-    // Not in a git repo or no diff — proceed without binding
-  }
+  const diffOutput = reviewedCodeDiff(opts.changeDir)
   const diffSha256 = sha256String(diffOutput)
+  const reviewed_files = reviewedCodeFiles(opts.changeDir)
+  if (reviewedCodeDiff(opts.changeDir) !== diffOutput) throw new Error('Working tree changed while gate-code read the reviewed diff')
 
   // Load SEAL and TrustMemory
   const sealGate = await import('seal-gate')
@@ -104,6 +130,7 @@ export async function runGateCode(opts: {
   }
 
   // Build SEAL evidence from self-check references
+  const regression = regressionEvidence(opts.projectRoot ?? process.cwd(), opts.changeDir)
   const references = selfCheck.evidence
     .filter(e => e.type === 'command')
     .map(e => ({ type: 'command' as const, command: e.command ?? '', exit_code: e.exit_code ?? 0, output: e.output ?? '' }))
@@ -123,6 +150,7 @@ export async function runGateCode(opts: {
       test_log: selfCheck.evidence.find(e => e.command?.includes('test'))?.output ?? '',
       build_log: '',
       references,
+      ...(regression ? { regression } : {}),
     },
     context: { agent_id: 'orca-agent', agent_role: 'developer',
       ...(propertyBridge ? { property_contracts: propertyBridge.contracts } : {}) },
@@ -148,6 +176,12 @@ export async function runGateCode(opts: {
     diffOutput,
   }, {}, opts.projectRoot ?? process.cwd())
 
+  // Replay and review run tests and tools; a tracked file they wrote would leave this verdict
+  // bound to a diff that no longer exists, so stop instead of recording it.
+  if (reviewedCodeDiff(opts.changeDir) !== diffOutput) {
+    throw new Error('Reviewed diff changed during gate-code (a test or tool modified tracked files); no verdict recorded — rerun the gate')
+  }
+
   // Build verdict entry for phase.json
   const testRef = selfCheck.evidence.find(e => e.command?.includes('test'))
   const verdictEntry: VerdictEntry = {
@@ -163,6 +197,7 @@ export async function runGateCode(opts: {
   const verdictDir = join(opts.changeDir, '.harness', 'gate-verdicts')
   mkdirSync(verdictDir, { recursive: true })
   writeFileSync(join(verdictDir, `${Date.now()}.json`), JSON.stringify({ ...resultWithProbe.result, ...verdictEntry,
+    reviewed_files, regression_evidence: Boolean(regression),
     ...(opts.taskId ? { task_id: opts.taskId } : {}) }, null, 2))
 
   // Update phase.json
@@ -188,6 +223,7 @@ export async function runGateCode(opts: {
     next_action: resultWithProbe.result.next_action,
     advisory_notes: resultWithProbe.result.advisory_notes,
     llm_hint: llmHint,
+    reviewed_files,
   }
 }
 

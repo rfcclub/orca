@@ -225,11 +225,15 @@ test('[value-correct] v', () => { expect(1).toBe(1); writeFileSync('source.js', 
     await expect(run(root, [{ id: 'value-correct', test: value, property: { name: 'p' } }])).rejects.toThrow(/property/);
   });
 
-  it('[BUN-016] refuses --base replay on Bun', async () => {
+  // Modified by gate-code-evidence: Bun replay is supported, and the base still never falls back to
+  // Vitest; the fixture's tdd.framework config is uncommitted, so only the overlay makes the base Bun.
+  it.skipIf(!hasBun)('[BUN-016] --base replay on Bun runs base and head under Bun, never Vitest', async () => {
     const root = project({ [value]: bunTest(`test('[value-correct] v', () => expect(value).toBe(1));`) });
     const { replayTests } = await import('../../src/verify/replay.js');
-    expect(() => replayTests(root, 'HEAD', [{ id: 'value-correct', test: value }])).toThrow(/replay is not supported for tdd.framework bun/);
-  });
+    symlinkSync(modules, join(root, 'node_modules'), 'dir');
+    const replay = replayTests(root, 'HEAD', [{ id: 'value-correct', test: value }]);
+    expect([replay.base.runner.framework, replay.head.runner.framework]).toEqual(['bun', 'bun']);
+  }, 30000);
 });
 
 describe.skipIf(!hasBun)('plan-json on bun', () => {
