@@ -1,0 +1,3 @@
+# rule path # reason
+non-english tests/harness/gate-regression-evidence.test.ts # unicode file name test
+non-english openspec/changes/gate-code-evidence/specs/gate-code-evidence/spec.md # describes the unicode file name test
