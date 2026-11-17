@@ -354,7 +354,7 @@ packages:
     hasBin: true
 
   seal-gate@file:vendor/seal-gate-0.6.0-beta.2.tgz:
-    resolution: {integrity: sha512-8jy0r1aGIahlBk+83F/TlrdK3RdcTaYVgaUmN+XXnmq25LWjtw/Bn8r3S40H1IRf4R4KpjQIPZ8EDYMB7wIFyw==, tarball: file:vendor/seal-gate-0.6.0-beta.2.tgz}
+    resolution: {integrity: sha512-QqE9cD/YE8ThZuQuj8zcgzcTw1Zdju69+fUhZEHMvqK+N63x/xfZoibrU6+T38+8u72FogCi2psFSnnKRRTKAw==, tarball: file:vendor/seal-gate-0.6.0-beta.2.tgz}
     version: 0.6.0-beta.2
     engines: {node: '>=22.5.0'}
     hasBin: true
