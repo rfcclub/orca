@@ -9,17 +9,17 @@ importers:
   .:
     dependencies:
       '@gotako/hammerhead-debug':
-        specifier: file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz
-        version: file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz
+        specifier: file:vendor/gotako-hammerhead-debug-0.5.0-beta.5.tgz
+        version: file:vendor/gotako-hammerhead-debug-0.5.0-beta.5.tgz
       '@gotako/pilotfish':
-        specifier: file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz
-        version: file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz(@gotako/orca@+)
+        specifier: file:vendor/gotako-pilotfish-0.2.0-beta.8.tgz
+        version: file:vendor/gotako-pilotfish-0.2.0-beta.8.tgz(@gotako/orca@)
       fast-check:
         specifier: 4.10.2
         version: 4.10.2
       seal-gate:
-        specifier: file:vendor/seal-gate-0.6.0-beta.0.tgz
-        version: file:vendor/seal-gate-0.6.0-beta.0.tgz
+        specifier: file:vendor/seal-gate-0.6.0-beta.2.tgz
+        version: file:vendor/seal-gate-0.6.0-beta.2.tgz
       yaml:
         specifier: ^2.8.3
         version: 2.9.0
@@ -42,17 +42,19 @@ importers:
 
 packages:
 
-  '@gotako/hammerhead-debug@file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz':
-    resolution: {integrity: sha512-kE7VUVuLIiHLH+QUKNDCjP58AcotemhBTtcY2glEcTo0frYpXooka9aaHUt80A2VUMZZ/mSRbumg7k9ZfzR0hQ==, tarball: file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz}
-    version: 0.5.0-beta.2
+  '@gotako/hammerhead-debug@file:vendor/gotako-hammerhead-debug-0.5.0-beta.5.tgz':
+    resolution: {integrity: sha512-1Pvy0dFROPX+AGLwpw7N2WhhH8aT0i/dpfr6lBFOCQfHsOJFFyr7scRbbZifMUuZqwPY/ywSfB+iS1nSfNQG/Q==, tarball: file:vendor/gotako-hammerhead-debug-0.5.0-beta.5.tgz}
+    version: 0.5.0-beta.5
+    engines: {node: '>=22'}
     hasBin: true
 
-  '@gotako/pilotfish@file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz':
-    resolution: {integrity: sha512-f24CF73bOLB9H5EzgWKgDARVA+mqVK07bvR6k7wtz55UeVFbbhcXeUGeQMZZCiUT1+ESPrS32zsnCPeDSt7kIA==, tarball: file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz}
-    version: 0.2.0-beta.6
+  '@gotako/pilotfish@file:vendor/gotako-pilotfish-0.2.0-beta.8.tgz':
+    resolution: {integrity: sha512-Tv1w0w0KiIH+7Olb/EX1+npdWjbYEwW4k/jtQ0KbgCiTNvtYZlByGibOMyvC625ilJOo/A17+OesaIa+o1fXqg==, tarball: file:vendor/gotako-pilotfish-0.2.0-beta.8.tgz}
+    version: 0.2.0-beta.8
+    engines: {node: '>=22'}
     hasBin: true
     peerDependencies:
-      '@gotako/orca': '>=1.6.2-beta.7 <2'
+      '@gotako/orca': ^1.6.2-beta.7 || ^1.7.0-0
     peerDependenciesMeta:
       '@gotako/orca':
         optional: true
@@ -351,9 +353,9 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
-  seal-gate@file:vendor/seal-gate-0.6.0-beta.0.tgz:
-    resolution: {integrity: sha512-lKNbbG/NVEQhx7qqLr6WY3BG7kRW/wGg5L/+KPYU/1y5YkPhBiSdbQpwt15zaPiy+pGb7ersaZQm8X3YKEADUQ==, tarball: file:vendor/seal-gate-0.6.0-beta.0.tgz}
-    version: 0.6.0-beta.0
+  seal-gate@file:vendor/seal-gate-0.6.0-beta.2.tgz:
+    resolution: {integrity: sha512-8jy0r1aGIahlBk+83F/TlrdK3RdcTaYVgaUmN+XXnmq25LWjtw/Bn8r3S40H1IRf4R4KpjQIPZ8EDYMB7wIFyw==, tarball: file:vendor/seal-gate-0.6.0-beta.2.tgz}
+    version: 0.6.0-beta.2
     engines: {node: '>=22.5.0'}
     hasBin: true
 
@@ -492,11 +494,11 @@ packages:
 
 snapshots:
 
-  '@gotako/hammerhead-debug@file:vendor/gotako-hammerhead-debug-0.5.0-beta.2.tgz': {}
+  '@gotako/hammerhead-debug@file:vendor/gotako-hammerhead-debug-0.5.0-beta.5.tgz': {}
 
-  '@gotako/pilotfish@file:vendor/gotako-pilotfish-0.2.0-beta.6.tgz(@gotako/orca@+)':
+  '@gotako/pilotfish@file:vendor/gotako-pilotfish-0.2.0-beta.8.tgz(@gotako/orca@)':
     optionalDependencies:
-      '@gotako/orca': link:.
+      '@gotako/orca': 'link:'
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
@@ -720,7 +722,7 @@ snapshots:
       '@rolldown/binding-win32-arm64-msvc': 1.2.3
       '@rolldown/binding-win32-x64-msvc': 1.2.3
 
-  seal-gate@file:vendor/seal-gate-0.6.0-beta.0.tgz: {}
+  seal-gate@file:vendor/seal-gate-0.6.0-beta.2.tgz: {}
 
   siginfo@2.0.0: {}
 
