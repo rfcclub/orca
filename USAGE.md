@@ -262,6 +262,14 @@ Scaffolds `self-check.md` — declare claims, evidence, known limitations, and u
 orca self-check user-auth
 ```
 
+### orca gate-plan <name>
+
+Runs the SEAL plan review with the success criteria locked from the intent. It needs an intent with an approval record (`Status: APPROVED`). The one exception is an approval-exempt bug intent exactly as `orca issue open` generates it for a bug issue (the `Issue:` line, the generated bug preamble and the final `Status: NOT REQUIRED (bug fix: the PR approval is the gate)` approval section); any other wording, hand-written status or edited marker is refused. The exemption only admits plan review, grants no approval, and the verdict file records `intent_approval: "bug-exempt"`. The intent still needs a `## Success Criteria` section with bullets.
+
+```bash
+orca gate-plan user-auth
+```
+
 ### orca gate-code <name>
 
 Runs the SEAL gate on the current diff — deterministic + optional LLM review, produces a trust score and a PASS/REVISE/BLOCK-style verdict:

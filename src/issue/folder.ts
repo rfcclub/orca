@@ -23,6 +23,14 @@ export interface CreateChangeInput {
 
 const NAME_RE = /^[a-z0-9][a-z0-9-]*$/;
 
+/**
+ * The exact generated markers of an approval-exempt bug intent. gate-plan recognises an intent as
+ * approval-exempt only by these (see isApprovalExemptBugIntent), so change them in one place.
+ */
+export const BUG_APPROVAL_EXEMPT_STATUS = 'Status: NOT REQUIRED (bug fix: the PR approval is the gate)';
+export const BUG_INTENT_PREAMBLE =
+  'Generated from a bug issue. A bug fix needs no intent approval; the PR approval is the gate. The issue is the intent of record; its edit history is on GitHub.';
+
 export function issueRef(repo: string, number: number): string {
   return `${repo}#${number}`;
 }
@@ -46,7 +54,7 @@ function renderIntent(input: CreateChangeInput): string {
     '',
     input.approved
       ? `Generated from the approved issue. The issue is the intent of record; its edit history is on GitHub.`
-      : `Generated from a bug issue. A bug fix needs no intent approval; the PR approval is the gate. The issue is the intent of record; its edit history is on GitHub.`,
+      : BUG_INTENT_PREAMBLE,
     '',
     issue.body.trim(),
     '',
@@ -63,7 +71,7 @@ function renderIntent(input: CreateChangeInput): string {
     parts.push('## Intent Approval', '', 'Status: APPROVED', '');
     if (approvedBy) parts.push(`Approved by: ${approvedBy}`);
   } else {
-    parts.push('## Intent Approval', '', 'Status: NOT REQUIRED (bug fix: the PR approval is the gate)', '');
+    parts.push('## Intent Approval', '', BUG_APPROVAL_EXEMPT_STATUS, '');
   }
   parts.push(`Date: ${date}`, '');
   return parts.join('\n');
