@@ -41,6 +41,8 @@ export interface VerdictEntry {
   bound_diff_sha256: string
   evidence_bound: {
     test_log_sha256?: string | null
+    /** Identity of every test-command record bound into test_log_sha256, in canonical order. */
+    test_records?: Array<{ command: string; exit_code: number | null; output_bytes: number; output_sha256: string }>
     build_log_sha256?: string | null
   }
 }

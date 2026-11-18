@@ -272,6 +272,8 @@ orca gate-code user-auth [--skip-state-check] [--llm [provider]]
 
 The reviewed diff is collected from `git diff HEAD` with an explicit ceiling of 64 MiB of git output. If the complete diff cannot be collected (it exceeds the ceiling, git exits non-zero, or git is missing) the gate stops with a `diff_collection_failed` diagnosis, records no verdict, and never reviews an empty diff or the self-check claims instead.
 
+Test evidence: every self-check command record whose command contains `test` is used, not just the first. Records are put in a canonical order (sorted by command, then raw record order), so reordering distinct commands changes nothing. With one matching record, the review, mutation probe and bound `test_log_sha256` use that record's raw output exactly as in earlier releases, so historical receipts are unchanged. With several, they use a framed aggregate that carries each record's command, exit code, output size, output hash and raw output, plus a count of records with a non-zero or missing exit code, so a failing record cannot hide behind a passing one. The verdict also records each bound record under `evidence_bound.test_records`. Aggregated output above 16 MiB, or a malformed record (non-string output, non-integer exit code), stops the gate with `test_evidence_invalid`; nothing is truncated.
+
 ### orca craft <name>
 
 Shows the craft review verdict (maintainability) for a change — if none exists yet, prints the prompt to generate one:

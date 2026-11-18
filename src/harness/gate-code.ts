@@ -6,6 +6,7 @@ import { readPhaseJson, recordGateVerdict, sha256String } from './phase-json.js'
 import { readPlanJson } from './plan-json.js'
 import { TransitionGuard } from './transition-guard.js'
 import { reviewedCodeDiff, reviewedCodeFiles } from './code-diff.js'
+import { selectTestEvidence } from './test-evidence.js'
 import { parseSpec } from '../spec/parser.js'
 import { createPropertySealBridge } from './property-seal.js'
 import { normalizeGateVerdict, type GateVerdict, type VerdictEntry } from './types.js'
@@ -67,6 +68,8 @@ export async function runGateCode(opts: {
   /** Byte ceiling for the reviewed git diff (default MAX_REVIEWED_DIFF_BYTES, 64 MiB). A larger
    *  diff makes the gate fail with diff_collection_failed; it is never truncated. */
   diffMaxBytes?: number
+  /** Test seam for the Level 2b mutation probe (defaults to seal-gate's). */
+  probeDeps?: ProbePlanTasksDeps
 }): Promise<GateCodeResult> {
   const guard = new TransitionGuard(opts.changeDir)
   guard.canEnter(opts.taskId ? 'apply' : 'gate-code', opts.skipStateCheck)
@@ -135,6 +138,9 @@ export async function runGateCode(opts: {
     }
   }
 
+  // All test-command records, in canonical order, bounded; see selectTestEvidence.
+  const testEvidence = selectTestEvidence(selfCheck.evidence)
+
   // Build SEAL evidence from self-check references
   const regression = regressionEvidence(opts.projectRoot ?? process.cwd(), opts.changeDir)
   const references = selfCheck.evidence
@@ -153,7 +159,7 @@ export async function runGateCode(opts: {
     output: diffOutput || selfCheck.claims.join('\n'),
     evidence: {
       diff: diffOutput,
-      test_log: selfCheck.evidence.find(e => e.command?.includes('test'))?.output ?? '',
+      test_log: testEvidence.testLog,
       build_log: '',
       references,
       ...(regression ? { regression } : {}),
@@ -178,9 +184,9 @@ export async function runGateCode(opts: {
   // Unpinned tests (mutation survived) fold a SPEC_UNTESTED advisory + trust drop into the result.
   const resultWithProbe = await probePlanTasks(sealResult, opts.changeDir, {
     content: specContent,
-    testLog: selfCheck.evidence.find(e => e.command?.includes('test'))?.output ?? '',
+    testLog: testEvidence.testLog,
     diffOutput,
-  }, {}, opts.projectRoot ?? process.cwd())
+  }, opts.probeDeps ?? {}, opts.projectRoot ?? process.cwd())
 
   // Replay and review run tests and tools; a tracked file they wrote would leave this verdict
   // bound to a diff that no longer exists, so stop instead of recording it.
@@ -189,12 +195,12 @@ export async function runGateCode(opts: {
   }
 
   // Build verdict entry for phase.json
-  const testRef = selfCheck.evidence.find(e => e.command?.includes('test'))
   const verdictEntry: VerdictEntry = {
     verdict: normalizeGateVerdict(sealResult.verdict),
     bound_diff_sha256: diffSha256,
     evidence_bound: {
-      test_log_sha256: testRef?.output ? sha256String(testRef.output) : null,
+      test_log_sha256: testEvidence.sha256,
+      ...(testEvidence.records.length ? { test_records: testEvidence.records } : {}),
       build_log_sha256: null,
     },
   }
