@@ -154,7 +154,7 @@ orca/
 Creates the intent artifact — required for a workflow with the Intent Gate:
 
 ```bash
-orca intent user-auth
+orca intent user-auth [--phase-json]
 ```
 
 Creates `orca/changes/user-auth/intent.md` with 15 sections: Raw Request, Problem, Desired Outcome, Users/Actors, Current Context, Proposed Direction, Scope, Non-Goals, Constraints, Success Criteria, Risks, Ambiguities (Blocking + Non-Blocking), Assumptions, Spec Seeds, Intent Approval.
@@ -162,6 +162,16 @@ Creates `orca/changes/user-auth/intent.md` with 15 sections: Raw Request, Proble
 **Intent Gate:** `orca spec <name>` will:
 - **Warn** (default) if intent.md doesn't exist yet
 - **Hard block** if config has `intent.enforce: true`
+
+### orca phase init <name>
+
+Creates `phase.json` for a change, which turns phase-order enforcement on for it. `orca intent <name> --phase-json` does the same when the change is created. A change without `phase.json` (every change created before this command, and any created by plain `orca intent`) keeps working in degraded mode: commands warn `phase.json not found — running in degraded mode (no state enforcement)` and the transition guard does not check phase order.
+
+```bash
+orca phase init user-auth
+```
+
+Once `phase.json` exists the guard refuses a phase whose prior phase is not complete: `record-red` and `plan-json start` need the phases before `apply` complete, `gate-code` needs `apply` complete (`plan-json finish`, or `orca loop`), and `verify` needs `gate-code` complete. Recording the earlier phases (`intent`, `plan`, `branch`) is done by the operator or the loop setup, not by a plain workflow command, so enable enforcement only for a change driven that way. The command refuses to replace an existing `phase.json` and has no effect on the guard itself (`--skip-state-check` is unchanged).
 
 ### orca spec <name>
 
@@ -308,7 +318,7 @@ orca learn user-auth
 
 ### orca plan-json <action> <name> [options]
 
-Weak-model task list, nested inside `phase.json`'s apply phase — the mechanical alternative to hand-writing `tasks.md` for models that need small, hash-chained, individually gated tasks:
+Weak-model task list, nested inside `phase.json`'s apply phase — the mechanical alternative to hand-writing `tasks.md` for models that need small, hash-chained, individually gated tasks. Phase order is enforced only for a change that has `phase.json` (`orca phase init <name>`); otherwise it runs in degraded mode:
 
 ```bash
 orca plan-json init user-auth --trace INTENT-ID --resolved-by <name>

@@ -38,7 +38,7 @@ export function createPhaseJson(changeDir: string, changeId: string): PhaseJson 
 
 export function readPhaseJson(changeDir: string): PhaseJson {
   const p = phaseJsonPath(changeDir)
-  if (!existsSync(p)) throw new Error(`phase.json not found at ${p} — run orca init`)
+  if (!existsSync(p)) throw new Error(`phase.json not found at ${p} — run "orca phase init <change>" to create it`)
   return JSON.parse(readFileSync(p, 'utf-8')) as PhaseJson
 }
 

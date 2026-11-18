@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdirSync, rmSync } from 'fs'
-import { join } from 'path'
+import { basename, join } from 'path'
 import { tmpdir } from 'os'
 import { TransitionGuard } from '../../src/harness/transition-guard.ts'
 import { createPhaseJson, recordPhaseComplete } from '../../src/harness/phase-json.ts'
@@ -31,6 +31,7 @@ describe('TransitionGuard', () => {
     try {
       guard.canEnter('intent', false)
       expect(warnSpy.some(w => w.includes('degraded') || w.includes('phase.json'))).toBe(true)
+      expect(warnSpy.some(w => w.includes(`orca phase init ${basename(tmpDir)}`))).toBe(true)
     } finally {
       console.warn = origWarn
     }

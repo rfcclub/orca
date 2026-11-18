@@ -2,8 +2,10 @@ import { join } from 'path';
 import { existsSync, readFileSync, mkdirSync } from 'fs';
 import { getChangeDir, changeExists, writeFileSafe } from '../utils.js';
 import { LEGACY_WORKSPACE_DIR } from '../../legacy.js';
+import { createChangePhaseJson } from './phase.js';
 
-export function cmdIntent(name: string): void {
+/** `phaseJson` also creates phase.json, so the change runs with phase enforcement from the start. */
+export function cmdIntent(name: string, opts: { phaseJson?: boolean } = {}): void {
   if (changeExists(name)) {
     console.error(`✗  Change "${name}" already exists at ${getChangeDir(name)}`);
     process.exit(1);
@@ -18,10 +20,12 @@ export function cmdIntent(name: string): void {
   const template = findIntentTemplate();
 
   writeFileSafe(join(changeDir, 'intent.md'), template);
+  if (opts.phaseJson) createChangePhaseJson(name);
 
   console.log(`✓  Created intent "${name}"`);
   console.log(`  ${changeDir}/`);
   console.log('  └── intent.md');
+  if (opts.phaseJson) console.log('  └── phase.json (phase enforcement on)');
   console.log('');
   console.log('💡  Next: review and approve the intent, then:');
   console.log(`  orca spec ${name}`);

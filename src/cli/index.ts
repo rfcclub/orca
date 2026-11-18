@@ -2,6 +2,7 @@
 
 import { cmdInit } from './commands/init.js';
 import { cmdIntent } from './commands/intent.js';
+import { cmdPhase } from './commands/phase.js';
 import { cmdSpec } from './commands/spec.js';
 import { cmdDesign } from './commands/design.js';
 import { cmdPlan } from './commands/plan.js';
@@ -43,8 +44,11 @@ switch (command) {
     cmdInit();
     break;
   case 'intent':
-    if (!args[0]) { console.error('Usage: orca intent <name>'); process.exit(1); }
-    cmdIntent(args[0]);
+    if (!args[0] || args[0].startsWith('--')) { console.error('Usage: orca intent <name> [--phase-json]'); process.exit(1); }
+    cmdIntent(args[0], { phaseJson: args.includes('--phase-json') });
+    break;
+  case 'phase':
+    cmdPhase(args);
     break;
   case 'spec':
     if (!args[0]) { console.error('Usage: orca spec <name>'); process.exit(1); }
@@ -178,7 +182,11 @@ Usage: orca <command> [options]
 
 Workflow commands:
   init                    Scaffold orca/ directory
-  intent <name>           Create an intent artifact (problem, outcome, non-goals)
+  intent <name> [--phase-json]
+                          Create an intent artifact (problem, outcome, non-goals);
+                          --phase-json also creates phase.json (phase enforcement on)
+  phase init <name>       Create phase.json for a change: turns phase enforcement on
+                          (a change without phase.json runs in degraded mode)
   spec <name>             Create a new change with proposal + spec
   design <name>           Add design.md to existing change
   plan <name>             Add tasks.md to existing change
@@ -208,6 +216,7 @@ Harness commands:
   learn <name>            Extract lessons from gate history
   plan-json <action> <name> [options]
                           Weak-model task list, nested inside phase.json's apply phase
+                          (enforced only for a change with phase.json: orca phase init <name>)
                           (init|add|start|red|complete|finish|show)
                           init:     --trace <INTENT-ID> --resolved-by <name>
                           add:      --id --behavior --acceptance --files --test [--assertion] [--consumes]

@@ -1,6 +1,6 @@
 import { createHash } from 'crypto'
 import { existsSync, readFileSync } from 'fs'
-import { join, resolve } from 'path'
+import { basename, join, resolve } from 'path'
 import { readPhaseJson, sha256File, LIFECYCLE } from './phase-json.js'
 import type { Phase, PhaseJson } from './types.js'
 import { reviewedCodeDiff } from './code-diff.js'
@@ -18,7 +18,7 @@ export class TransitionGuard {
     try {
       pj = readPhaseJson(this.changeDir)
     } catch {
-      console.warn('⚠  phase.json not found — running in degraded mode (no state enforcement)')
+      console.warn(`⚠  phase.json not found — running in degraded mode (no state enforcement); run "orca phase init ${basename(this.changeDir)}" to turn enforcement on (the earlier phases must then be recorded complete; see USAGE.md)`)
       return
     }
 
