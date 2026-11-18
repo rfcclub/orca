@@ -64,6 +64,9 @@ export async function runGateCode(opts: {
   selfCheckPath?: string
   /** Nested task review does not authorize the overall phase exit. */
   taskId?: string
+  /** Byte ceiling for the reviewed git diff (default MAX_REVIEWED_DIFF_BYTES, 64 MiB). A larger
+   *  diff makes the gate fail with diff_collection_failed; it is never truncated. */
+  diffMaxBytes?: number
 }): Promise<GateCodeResult> {
   const guard = new TransitionGuard(opts.changeDir)
   guard.canEnter(opts.taskId ? 'apply' : 'gate-code', opts.skipStateCheck)
@@ -88,10 +91,13 @@ export async function runGateCode(opts: {
   const specContent = findSpecContent(opts.changeDir)
 
   // Capture current diff — binds this verdict to exact code state
-  const diffOutput = reviewedCodeDiff(opts.changeDir)
+  // A collection failure (oversized diff, git error, git missing) throws DiffCollectionError
+  // here, before anything is reviewed or recorded: never fall back to an empty diff or the claims.
+  const diffOpts = { maxBytes: opts.diffMaxBytes }
+  const diffOutput = reviewedCodeDiff(opts.changeDir, diffOpts)
   const diffSha256 = sha256String(diffOutput)
-  const reviewed_files = reviewedCodeFiles(opts.changeDir)
-  if (reviewedCodeDiff(opts.changeDir) !== diffOutput) throw new Error('Working tree changed while gate-code read the reviewed diff')
+  const reviewed_files = reviewedCodeFiles(opts.changeDir, diffOpts)
+  if (reviewedCodeDiff(opts.changeDir, diffOpts) !== diffOutput) throw new Error('Working tree changed while gate-code read the reviewed diff')
 
   // Load SEAL and TrustMemory
   const sealGate = await import('seal-gate')
@@ -178,7 +184,7 @@ export async function runGateCode(opts: {
 
   // Replay and review run tests and tools; a tracked file they wrote would leave this verdict
   // bound to a diff that no longer exists, so stop instead of recording it.
-  if (reviewedCodeDiff(opts.changeDir) !== diffOutput) {
+  if (reviewedCodeDiff(opts.changeDir, diffOpts) !== diffOutput) {
     throw new Error('Reviewed diff changed during gate-code (a test or tool modified tracked files); no verdict recorded — rerun the gate')
   }
 

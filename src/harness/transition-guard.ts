@@ -69,7 +69,10 @@ export class TransitionGuard {
         }
       } catch (e) {
         if ((e as Error).message.includes('stale PASS')) throw e
-        // git not available or no diff — skip diff binding check
+        // The verdict is bound to a diff; if that diff cannot be collected the binding cannot be
+        // checked, so refuse rather than finish on an unverified PASS.
+        if ((e as { code?: string }).code === 'diff_collection_failed') throw e
+        // no diff to compare — skip diff binding check
       }
       if (pj.phases['verify'].status !== 'complete') {
         throw new Error('verify not complete')

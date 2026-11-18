@@ -270,6 +270,8 @@ Runs the SEAL gate on the current diff — deterministic + optional LLM review, 
 orca gate-code user-auth [--skip-state-check] [--llm [provider]]
 ```
 
+The reviewed diff is collected from `git diff HEAD` with an explicit ceiling of 64 MiB of git output. If the complete diff cannot be collected (it exceeds the ceiling, git exits non-zero, or git is missing) the gate stops with a `diff_collection_failed` diagnosis, records no verdict, and never reviews an empty diff or the self-check claims instead.
+
 ### orca craft <name>
 
 Shows the craft review verdict (maintainability) for a change — if none exists yet, prints the prompt to generate one:
